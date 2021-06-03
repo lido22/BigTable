@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "xlsx": "^0.17.0"
+    "mongodb": "^3.6.9",
+    "mongoose": "^5.12.12"
   }
 }
