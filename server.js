@@ -1,6 +1,3 @@
-const XLSX = require('xlsx')
-const fs = require('fs')
-const MongoClient = require('mongodb').MongoClient
 const mongoose = require('mongoose')
 
 //connect to database
@@ -40,7 +37,6 @@ const tracksSchema = mongoose.Schema({
   }
 });
 const Track = mongoose.model('track',tracksSchema);
-// const track = new Track(dbName);
 
 async function set(row, obj){
   const track = await Track
