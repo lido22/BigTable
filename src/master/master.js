@@ -1,5 +1,9 @@
 const mongoose = require('mongoose')
 const fs = require('fs')
+const http = require('http');
+const master = http.createServer();
+const io = require('socket.io')(master);
+
 //connect to database
 const url = 'mongodb://127.0.0.1:27017/tracks'
 const dbName = 'tracks'
@@ -10,7 +14,7 @@ mongoose.connect(url, { useNewUrlParser: true,  useUnifiedTopology: true })
 //schema and model
 const tracksSchema = mongoose.Schema({
   ID: {
-    type:Number,
+    type:String,
     required:true
   },
   Position:{
@@ -40,30 +44,30 @@ const Track = mongoose.model('track',tracksSchema);
 async function makeTablets(){
     let tabletMarkers = []
     const ec = await Track
-      .find({Region:/^ec/})
-      .sort({Region:1})
+      .find({ID:/^ec/})
+      .sort({ID:1})
     // console.log(ec[0].ID)
     // console.log(ec[ec.length-1].ID)
-    tabletMarkers.push(ec[0].Region)
-    tabletMarkers.push(ec[ec.length-1].Region)
+    tabletMarkers.push(ec[0].ID)
+    tabletMarkers.push(ec[ec.length-1].ID)
 
     // console.log('fr')
     const fr = await Track
-        .find({Region:/^fr/})
-        .sort({Region:1})
+        .find({ID:/^fr/})
+        .sort({ID:1})
     // console.log(fr[0].ID)
     // console.log(fr[fr.length-1].ID)
-    tabletMarkers.push(fr[0].Region)
-    tabletMarkers.push(fr[fr.length-1].Region)
+    tabletMarkers.push(fr[0].ID)
+    tabletMarkers.push(fr[fr.length-1].ID)
 
     // console.log('it')
     const it = await Track
-        .find({Region:/^it/})
-        .sort({Region:1})
+        .find({ID:/^it/})
+        .sort({ID:1})
     // console.log(it[0].ID)
     // console.log(it[it.length-1].ID)
-    tabletMarkers.push(it[0].Region)
-    tabletMarkers.push(it[it.length-1].Region)
+    tabletMarkers.push(it[0].ID)
+    tabletMarkers.push(it[it.length-1].ID)
     return tabletMarkers
 }
 makeTablets()
@@ -81,6 +85,11 @@ makeTablets()
             endKey : tabletMarkers[5]
         }
     }
+    io.on('connection', (socket) => {
+      socket.on('fetch-meta', room => {
+        socket.emit('get-meta', meta)
+      })
+    })
     writeMeta(meta)
 })
 
@@ -93,5 +102,8 @@ function writeMeta(meta){
         if (err) throw err;
         console.log('metadata written!');
     });
-    
 }
+
+
+
+master.listen(3000, () => console.log('server started'));

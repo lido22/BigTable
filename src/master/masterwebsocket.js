@@ -1,8 +1,6 @@
 const http = require('http');
-
-const server = http.createServer();
-
-const io = require('socket.io')(server);
+const master = http.createServer();
+const io = require('socket.io')(master);
 
 let numberOfClients = 0;
 io.on('connection', (client) => {
@@ -14,8 +12,8 @@ io.on('connection', (client) => {
   });
 
   client.on('insert', (data) => {
-    console.log('your are inserting ', data);
+  console.log('your are inserting ', data);
   });
 });
 
-server.listen(8080, () => console.log('server started'));
+server.listen(3000, () => console.log('server started'));
