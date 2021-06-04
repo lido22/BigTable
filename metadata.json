@@ -1,10 +1,10 @@
 {
     "tabletServer1": {
-        "startKey": 1,
-        "endKey": 800
+        "startKey": "ec1",
+        "endKey": "ec99"
     },
     "tabletServer2": {
-        "startKey": 801,
-        "endKey": 1200
+        "startKey": "fr1",
+        "endKey": "it99"
     }
 }

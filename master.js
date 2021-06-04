@@ -40,43 +40,44 @@ const Track = mongoose.model('track',tracksSchema);
 async function makeTablets(){
     let tabletMarkers = []
     const ec = await Track
-      .find({Region:'ec'})
-      .sort({ID:1})
+      .find({Region:/^ec/})
+      .sort({Region:1})
     // console.log(ec[0].ID)
     // console.log(ec[ec.length-1].ID)
-    tabletMarkers.push(ec[0].ID)
-    tabletMarkers.push(ec[ec.length-1].ID)
+    tabletMarkers.push(ec[0].Region)
+    tabletMarkers.push(ec[ec.length-1].Region)
 
     // console.log('fr')
     const fr = await Track
-        .find({Region:'fr'})
-        .sort({ID:1})
+        .find({Region:/^fr/})
+        .sort({Region:1})
     // console.log(fr[0].ID)
     // console.log(fr[fr.length-1].ID)
-    tabletMarkers.push(fr[0].ID)
-    tabletMarkers.push(fr[fr.length-1].ID)
+    tabletMarkers.push(fr[0].Region)
+    tabletMarkers.push(fr[fr.length-1].Region)
 
     // console.log('it')
     const it = await Track
-        .find({Region:'it'})
-        .sort({ID:1})
+        .find({Region:/^it/})
+        .sort({Region:1})
     // console.log(it[0].ID)
     // console.log(it[it.length-1].ID)
-    tabletMarkers.push(it[0].ID)
-    tabletMarkers.push(it[it.length-1].ID)
+    tabletMarkers.push(it[0].Region)
+    tabletMarkers.push(it[it.length-1].Region)
     return tabletMarkers
 }
 makeTablets()
 .then(tabletMarkers =>{
     var randomBoolean = Math.random() < 0.5  
     var server1Lenght = randomBoolean? tabletMarkers[3]:tabletMarkers[1];
+    var server2Start = randomBoolean? tabletMarkers[4]:tabletMarkers[2]
     meta = {
         tabletServer1:{
             startKey : tabletMarkers[0],
             endKey : server1Lenght
         },
         tabletServer2:{
-            startKey : server1Lenght+1,
+            startKey : server2Start,
             endKey : tabletMarkers[5]
         }
     }

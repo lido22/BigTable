@@ -40,28 +40,26 @@ const Track = mongoose.model('track',tracksSchema);
 
 async function set(row, obj){
   const track = await Track
-    .find({ID:row})
+    .find({Region:row})
       track[0].set(obj) 
       track[0].save()
 }
 
 async function DeleteCells(row, obj){
   const track = await Track
-    .find({ID:row})
+    .find({Region:row})
       console.log(track)
-      track[0].set(obj) 
       console.log(track)
-      track[0].save()
 }
 // DeleteCells(1, {Name:"", Date:"", Position:""})
 
 async function DeleteRow(row){
-  const track = await Track.find({ID : row})
+  const track = await Track.find({Region : row})
   track[0].remove()
 }
 
 async function AddRow(row, obj){
-  obj.ID = row
+  obj.Region = row
   const track = new Track(obj)
   const result = await track.save()
 }
@@ -75,10 +73,10 @@ async function AddRow(row, obj){
 
 async function ReadRows(rows){
   const tracks = await Track
-      .find({ID: {$in: [1,2,3]}})
+      .find({Region: {$in: rows}})
   return tracks
 }
-ReadRows([1,2,3])
+ReadRows(['ec11', 'fr54', 'it358'])
 .then(tracks => {
    console.log(tracks)
 })
