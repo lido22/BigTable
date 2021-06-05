@@ -36,25 +36,22 @@ async function DeleteRow(row) {
 }
 //to-do
 async function AddRow(obj) {
-  
   const track = new Track(obj);
   await track.save();
 }
 
 async function ReadRows(rows) {
   tracks = [];
-
-  rows.forEach(async (row) => {
+  for (const row of rows) {
     const track = await Track.findOne(row);
     tracks.push(track);
-    console.log(track)
-  });
-
+  }
 
   return tracks;
 }
 
-/*const rows = [
+/*
+const rows = [
   { Region: 'ec', ID: 11 },
   { Region: 'fr', ID: 54 },
   { Region: 'it', ID: 358 },
@@ -66,6 +63,7 @@ ReadRows(rows)
   })
   .catch((err) => console.log(err));
 */
+
 function connectMaster(url) {
   const socket = clientIO(url);
   socket.on('connect', () => {
@@ -103,26 +101,24 @@ function writeMeta(meta) {
 
 const socket = connectMaster('http://localhost:3000');
 server.listen(8080, () => console.log('server started'));
-io.on('connection',(socket)=>{
-  socket.on('set',(req)=>{
-    set(req.row,req.object);
-  })
-  socket.on('addRow',(req)=>{
+io.on('connection', (socket) => {
+  socket.on('set', (req) => {
+    set(req.row, req.object);
+  });
+  socket.on('addRow', (req) => {
     AddRow(req.object);
-  })
-  socket.on('delete',(req)=>{
+  });
+  socket.on('delete', (req) => {
     console.log(req);
     DeleteRow(req);
-  })
-  socket.on('deleteCells',(req)=>{
-    DeleteCells(req.row,req.object);
-  })
-  socket.on('readRows',(req)=>{
-    
-    ReadRows(req).then(tracks=>{
-      console.log(tracks)
-      socket.emit("sendingRows",tracks)
+  });
+  socket.on('deleteCells', (req) => {
+    DeleteCells(req.row, req.object);
+  });
+  socket.on('readRows', (req) => {
+    ReadRows(req).then((tracks) => {
+      console.log(tracks);
+      socket.emit('sendingRows', tracks);
     });
-
-  })
-})
+  });
+});
