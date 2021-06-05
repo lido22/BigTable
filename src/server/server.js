@@ -2,6 +2,9 @@ const http = require('http');
 const server = http.createServer();
 const mongoose = require('mongoose');
 
+const AsyncLock = require('async-lock');
+const lock = new AsyncLock();
+
 const clientIO = require('socket.io-client');
 const fs = require('fs');
 const Track = require('../common/track.model');
@@ -23,23 +26,29 @@ let meta = {};
 let port = undefined;
 
 async function set(row, obj) {
-  const track = await Track.findOneAndUpdate(row, obj);
+  return await Track.findOneAndUpdate(row, obj);
 }
 
 async function DeleteCells(row, obj) {
-  const track = await Track.findOneAndUpdate(row, obj);
-  console.log(track);
-  console.log(track);
+  return await Track.findOneAndUpdate(row, obj);
 }
 // DeleteCells(1, {Name:"", Date:"", Position:""})
 
 async function DeleteRow(row) {
-  await Track.findOneAndRemove(row);
+  return await Track.findOneAndRemove(row);
 }
 //to-do
 async function AddRow(obj) {
+  const lastTrack = await Track.findOne({ Region: obj.Region })
+    .sort({ ID: -1 })
+    .limit(1);
+
+  const lastID = lastTrack.ID;
+
+  obj.ID = lastID + 1;
+
   const track = new Track(obj);
-  await track.save();
+  return track.save();
 }
 
 async function ReadRows(rows) {
@@ -61,19 +70,21 @@ function connectMaster(url) {
 }
 
 function openServer() {
-  server.listen(port, () => console.log('server started'));
-  const io = require('socket.io')(server);
-  io.on('connection', (socket) => {
-    handleSet(socket);
-    handleAddRow(socket);
-    handleDelete(socket);
-    handleDeleteCells(socket);
-    handleReadRows(socket);
+  server.listen(port, () => {
+    console.log('server started');
+
+    const io = require('socket.io')(server);
+    io.on('connection', (socket) => {
+      handleSet(socket);
+      handleAddRow(socket);
+      handleDelete(socket);
+      handleDeleteCells(socket);
+      handleReadRows(socket);
+    });
   });
 }
 
-connectMaster('http://localhost:3000');
-//openServer();
+const masterSocket = connectMaster('http://localhost:3000');
 
 const handleGetMeta = (socket) => {
   socket.on('get-meta', (newMeta) => {
@@ -88,26 +99,46 @@ const handleGetMeta = (socket) => {
 
 const handleDelete = (socket) => {
   socket.on('delete', (req) => {
-    console.log(req);
-    DeleteRow(req);
+    lock.acquire(req.row.Region, function (done) {
+      DeleteRow(req.row)
+        .then((row) => {
+          if (row) {
+            console.log(`Deleted Row ${row.ID} - ${row.Region}`);
+            handleAddAndDelete([{ region: row.Region, count: -1 }]);
+          }
+
+          sendDoneEvent(socket);
+          done();
+        })
+        .catch(console.log);
+    });
   });
 };
 
 const handleDeleteCells = (socket) => {
   socket.on('deleteCells', (req) => {
-    DeleteCells(req.row, req.object);
+    DeleteCells(req.row, req.object).then(() => sendDoneEvent(socket));
   });
 };
 
 const handleAddRow = (socket) => {
   socket.on('addRow', (req) => {
-    AddRow(req.object);
+    lock.acquire(req.object.Region, function (done) {
+      AddRow(req.object)
+        .then((row) => {
+          console.log(`Added Row ${row.ID} - ${row.Region}`);
+          handleAddAndDelete([{ region: row.Region, count: 1 }]);
+          sendDoneEvent(socket);
+          done();
+        })
+        .catch(console.log);
+    });
   });
 };
 
 const handleSet = (socket) => {
   socket.on('set', (req) => {
-    set(req.row, req.object);
+    set(req.row, req.object).then(() => sendDoneEvent(socket));
   });
 };
 
@@ -118,4 +149,12 @@ const handleReadRows = (socket) => {
       socket.emit('sendingRows', tracks);
     });
   });
+};
+
+const handleAddAndDelete = (addedRows) => {
+  masterSocket.emit('addedRows', addedRows);
+};
+
+const sendDoneEvent = (socket) => {
+  socket.emit('done');
 };

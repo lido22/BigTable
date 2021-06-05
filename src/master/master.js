@@ -54,6 +54,7 @@ makeTablets().then((tabletMarkers) => {
 
   const meta = updateMeta(regions);
 
+  // master to server socket
   const io = require('socket.io')(masterToServer);
 
   io.on('connection', (socket) => {
@@ -70,6 +71,10 @@ makeTablets().then((tabletMarkers) => {
       portMap[socket.id] = undefined;
       socketsCount--;
       loadBalancing();
+    });
+
+    socket.on('addedRows', (addedRows) => {
+      loadBalancing(addedRows);
     });
   });
   console.log(tabletsCounts);

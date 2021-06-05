@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 
 //schema and model
 const tracksSchema = mongoose.Schema({
-  _id: false,
   Region: {
     type: String,
     required: true,
@@ -31,7 +30,7 @@ const tracksSchema = mongoose.Schema({
   Date: String,
 });
 
-tracksSchema.index({ Reqgion: 1, ID: 1 }, { unique: true });
+tracksSchema.index({ Region: 1, ID: 1 }, { unique: true });
 const Track = mongoose.model('track', tracksSchema);
 
 module.exports = Track;
