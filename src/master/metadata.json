@@ -1,10 +1,15 @@
-{
-    "tabletServer1": {
-        "startKey": "ec1",
-        "endKey": "fr99"
-    },
-    "tabletServer2": {
-        "startKey": "it1",
-        "endKey": "it99"
-    }
-}
+[
+  {
+    "regions": [
+      "ab",
+      "it",
+      "fr"
+    ]
+  },
+  {
+    "regions": [
+      "a7a",
+      "ec"
+    ]
+  }
+]

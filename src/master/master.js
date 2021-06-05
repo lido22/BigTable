@@ -21,55 +21,12 @@ mongoose
 const sockets = [];
 const socketsCount = 0;
 const socketsMap = {};
+let tabletsCounts = [];
 
-async function makeTablets() {
-  let tabletMarkers = [];
-  const ec = await Track.find({ Region: 'ec' }).sort({ ID: 1 });
-  // console.log(ec[0].ID)
-  // console.log(ec[ec.length-1].ID)
-  tabletMarkers.push({ Region: ec[0].Region, ID: ec[0].ID });
-  tabletMarkers.push({
-    Region: ec[ec.length - 1].Region,
-    ID: ec[ec.length - 1].ID,
-  });
-
-  // console.log('fr')
-  const fr = await Track.find({ Region: 'fr' }).sort({ ID: 1 });
-  // console.log(fr[0].ID)
-  // console.log(fr[fr.length-1].ID)
-  tabletMarkers.push({ Region: fr[0].Region, ID: fr[0].ID });
-  tabletMarkers.push({
-    Region: fr[fr.length - 1].Region,
-    ID: fr[fr.length - 1].ID,
-  });
-
-  // console.log('it')
-  const it = await Track.find({ Region: 'it' }).sort({ ID: 1 });
-  // console.log(it[0].ID)
-  // console.log(it[it.length-1].ID)
-  tabletMarkers.push({ Region: it[0].Region, ID: it[0].ID });
-  tabletMarkers.push({
-    Region: it[it.length - 1].Region,
-    ID: it[it.length - 1].ID,
-  });
-
-  return tabletMarkers;
-}
 makeTablets().then((tabletMarkers) => {
-  var randomBoolean = Math.random() < 0.5;
-  var server1Lenght = randomBoolean ? tabletMarkers[3] : tabletMarkers[1];
-  var server2Start = randomBoolean ? tabletMarkers[4] : tabletMarkers[2];
+  const regions = tabletMarkers.map((marker) => marker._id);
 
-  const meta = [
-    {
-      startKey: tabletMarkers[0],
-      endKey: server1Lenght,
-    },
-    {
-      startKey: server2Start,
-      endKey: tabletMarkers[5],
-    },
-  ];
+  const meta = updateMeta(regions);
 
   io.on('connection', (socket) => {
     sockets.push(socket);
@@ -79,15 +36,40 @@ makeTablets().then((tabletMarkers) => {
       socket.emit('get-meta', meta[socketsMap[socket.id]]);
     });
   });
-
+  console.log(tabletsCounts);
   writeMeta(meta);
 });
+
+master.listen(3000, () => console.log('server started'));
+
+async function makeTablets() {
+  const aggregatorOpts = [
+    {
+      $group: {
+        _id: '$Region',
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $sort: {
+        count: 1,
+      },
+    },
+  ];
+  const regions = await Track.aggregate(aggregatorOpts);
+  tabletsCounts = regions.reduce((prev, curr) => {
+    prev[curr._id] = curr.count;
+    return prev;
+  }, {});
+
+  return regions;
+}
 
 //writing metadata
 function writeMeta(meta) {
   fs.writeFile(
-    './metadata.json',
-    JSON.stringify(meta, null, 4),
+    './src/master/metadata.json',
+    JSON.stringify(meta, null, 2),
     function (err) {
       if (err) throw err;
       console.log('metadata written!');
@@ -95,4 +77,43 @@ function writeMeta(meta) {
   );
 }
 
-master.listen(3000, () => console.log('server started'));
+async function loadBalancing(addedRows) {
+  addedRows.forEach((addedRow) => {
+    tabletsCounts[addedRow.region] =
+      tabletsCounts[addedRow.region] || 0 + addedRow.count;
+  });
+
+  const sortedRegions = Object.keys(tabletsCounts).sort(
+    (a, b) => tabletsCounts[a] - tabletsCounts[b]
+  );
+
+  const meta = updateMeta(sortedRegions);
+  writeMeta(meta);
+}
+
+function updateMeta(sortedRegions) {
+  const firstServerRegions = [];
+  const secondServerRegions = [];
+  for (
+    let i = 0,
+      j = sortedRegions.length - 1,
+      servers = [firstServerRegions, secondServerRegions];
+    i < sortedRegions.length / 2;
+    i++, j--
+  ) {
+    if (i == j) {
+      servers[i % 2].push(sortedRegions[i]);
+      break;
+    }
+    servers[i % 2].push(sortedRegions[i], sortedRegions[j]);
+  }
+  const meta = [
+    {
+      regions: firstServerRegions,
+    },
+    {
+      regions: secondServerRegions,
+    },
+  ];
+  return meta;
+}
