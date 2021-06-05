@@ -122,13 +122,22 @@ function writeMeta(meta) {
 async function sendMeta(meta) {
   // send meta to all servers
   for (const socket of sockets) {
-    console.log(meta[socket.id]);
+    //console.log(meta[socket.id]);
     socket.emit('get-meta', meta[socket.id]);
   }
 
   // send meta to all clients
   for (const socket of clientSockets) {
     socket.emit('get-meta', meta);
+  }
+}
+
+async function sendDB(meta) {
+  // send DB to all servers
+  for (const socket of sockets) {
+    const regions = meta[socket.id].regions;
+    const tracks = await Track.find({ Region: { $in: regions } });
+    socket.emit('get-db', tracks);
   }
 }
 
@@ -164,6 +173,7 @@ function updateMeta(sortedRegions) {
     };
 
     sendMeta(meta);
+    sendDB(meta);
 
     return meta;
   }
@@ -196,6 +206,7 @@ function updateMeta(sortedRegions) {
   };
 
   sendMeta(meta);
+  sendDB(meta);
 
   return meta;
 }

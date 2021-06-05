@@ -10,17 +10,10 @@ const fs = require('fs');
 const Track = require('../common/track.model');
 
 //connect to database
-const url = 'mongodb://127.0.0.1:27017/tracks';
-const dbName = 'tracks';
 
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
-
-mongoose
-  .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB...'))
-  .catch((err) => console.log('Unable to connect...'));
 
 let meta = {};
 let port = undefined;
@@ -65,6 +58,7 @@ function connectMaster(url) {
   const socket = clientIO(url);
   socket.on('connect', () => {
     handleGetMeta(socket);
+    handleGetDB(socket);
   });
   return socket;
 }
@@ -94,6 +88,24 @@ const handleGetMeta = (socket) => {
       openServer();
     }
     console.log(meta);
+  });
+};
+
+const handleGetDB = (socket) => {
+  socket.on('get-db', (db) => {
+    // connect to db
+    const url = `mongodb://127.0.0.1:27017/tracks${meta.port % 10}`;
+    console.log(url);
+    mongoose
+      .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
+      .then(() => console.log('Connected to MongoDB...'))
+      .then(async () => {
+        // create db
+        await Track.deleteMany();
+        await Track.insertMany(db);
+        console.log('Created DB');
+      })
+      .catch((err) => console.log('Unable to connect...', err));
   });
 };
 
