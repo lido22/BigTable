@@ -117,33 +117,52 @@ const handleDelete = (socket) => {
 
 const handleDeleteCells = (socket) => {
   socket.on('deleteCells', (req) => {
-    DeleteCells(req.row, req.object).then(() => sendDoneEvent(socket));
+    lock.acquire(req.row.Region, function (done) {
+      DeleteCells(req.row, req.object)
+        .then(() => sendDoneEvent(socket))
+        .then(done);
+    });
   });
 };
 
 const handleAddRow = (socket) => {
   socket.on('addRow', (req) => {
-    lock.acquire(req.object.Region, function (done) {
-      AddRow(req.object)
-        .then((row) => {
-          console.log(`Added Row ${row.ID} - ${row.Region}`);
-          handleAddAndDelete([{ region: row.Region, count: 1 }]);
-          sendDoneEvent(socket);
-          done();
-        })
-        .catch(console.log);
-    });
+    lock
+      .acquire(req.row.Region, function (done) {
+        // chech if not locked
+        done();
+      })
+      .then(() => {
+        AddRow(req.object)
+          .then((row) => {
+            console.log(`Added Row ${row.ID} - ${row.Region}`);
+            handleAddAndDelete([{ region: row.Region, count: 1 }]);
+            sendDoneEvent(socket);
+          })
+          .catch(console.log);
+      });
   });
 };
 
 const handleSet = (socket) => {
   socket.on('set', (req) => {
-    set(req.row, req.object).then(() => sendDoneEvent(socket));
+    lock.acquire(req.row.Region, function (done) {
+      set(req.row, req.object)
+        .then(() => sendDoneEvent(socket))
+        .then(done);
+    });
   });
 };
 
 const handleReadRows = (socket) => {
   socket.on('readRows', (req) => {
+    lock.acquire(
+      [...new Set(Object.values(req).map((row) => row.Region))],
+      function (done) {
+        // chech if not locked
+        done();
+      }
+    );
     ReadRows(req).then((tracks) => {
       console.log(tracks);
       socket.emit('sendingRows', tracks);

@@ -85,6 +85,46 @@ async function test2() {
   serverSocket.emit('delete', req);
 }
 
+async function test3() {
+  // addRow
+  const req = [
+    {
+      Region: 'it',
+      ID: 22,
+    },
+    {
+      Region: 'ec',
+      ID: 21,
+    },
+    {
+      Region: 'it',
+      ID: 20,
+    },
+  ];
+
+  // get serverSocket
+  const serverSocket = getServerSocket('it');
+
+  serverSocket.emit('readRows', req);
+}
+
+async function test4() {
+  // addRow
+  const req = {
+    row: {
+      Region: 'fr',
+    },
+    object: {
+      Name: undefined,
+    },
+  };
+
+  // get serverSocket
+  const serverSocket = getServerSocket(req.row.Region);
+
+  serverSocket.emit('deleteCells', req);
+}
+
 setTimeout(() => {
   test1();
 }, 1000);
@@ -92,3 +132,11 @@ setTimeout(() => {
 setTimeout(() => {
   test2();
 }, 2000);
+
+setTimeout(() => {
+  test3();
+}, 3000);
+
+setTimeout(() => {
+  test4();
+}, 4000);
