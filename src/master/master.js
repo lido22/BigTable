@@ -21,6 +21,15 @@ mongoose
 let sockets = [];
 let socketsCount = 0;
 let tabletsCounts = [];
+let portMap = {};
+
+function isPortTaken(port) {
+  let taken = 0;
+  Object.values(portMap).forEach((p) => {
+    taken |= p === port;
+  });
+  return taken;
+}
 
 makeTablets().then((tabletMarkers) => {
   const regions = tabletMarkers.map((marker) => marker._id);
@@ -31,10 +40,14 @@ makeTablets().then((tabletMarkers) => {
     sockets.push(socket);
     socketsCount++;
 
+    if (!isPortTaken(8080)) portMap[socket.id] = 8080;
+    else portMap[socket.id] = 8081;
+
     loadBalancing();
 
     socket.on('disconnect', () => {
       sockets = sockets.filter((v) => v.id !== socket.id);
+      portMap[socket.id] = undefined;
       socketsCount--;
       loadBalancing();
     });
@@ -102,15 +115,17 @@ async function loadBalancing(addedRows = []) {
 }
 
 function updateMeta(sortedRegions) {
+  // no servers
+  if (socketsCount === 0) {
+    return []; // empty meta
+  }
+
   if (socketsCount < 2) {
-    // no servers
-    if (socketsCount === 0) {
-      return []; // empty meta
-    }
     // if one server connected
     const meta = {
       [sockets[0].id]: {
         regions: sortedRegions,
+        port: portMap[sockets[0].id],
       },
     };
 
@@ -138,9 +153,11 @@ function updateMeta(sortedRegions) {
   const meta = {
     [sockets[0].id]: {
       regions: firstServerRegions,
+      port: portMap[sockets[0].id],
     },
     [sockets[1].id]: {
       regions: secondServerRegions,
+      port: portMap[sockets[1].id],
     },
   };
 

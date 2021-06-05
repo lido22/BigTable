@@ -20,6 +20,7 @@ mongoose
   .catch((err) => console.log('Unable to connect...'));
 
 let meta = {};
+let port = undefined;
 
 async function set(row, obj) {
   const track = await Track.findOneAndUpdate(row, obj);
@@ -60,7 +61,7 @@ function connectMaster(url) {
 }
 
 function openServer() {
-  server.listen(8081, () => console.log('server started'));
+  server.listen(port, () => console.log('server started'));
   const io = require('socket.io')(server);
   io.on('connection', (socket) => {
     handleSet(socket);
@@ -71,34 +72,16 @@ function openServer() {
   });
 }
 
-function loadMetaData() {
-  let rawdata = fs.readFileSync('./metadata.json');
-  let metaTable = {};
-  try {
-    metaTable = JSON.parse(rawdata);
-  } catch (err) {
-    console.log('metadata File is Empty');
-  }
-  return metaTable;
-}
-
-function writeMeta(meta) {
-  fs.writeFile(
-    './metadata.json',
-    JSON.stringify(meta, null, 4),
-    function (err) {
-      if (err) throw err;
-      console.log('metadata written!');
-    }
-  );
-}
-
 connectMaster('http://localhost:3000');
-openServer();
+//openServer();
 
 const handleGetMeta = (socket) => {
   socket.on('get-meta', (newMeta) => {
     meta = newMeta;
+    if (port === undefined) {
+      port = meta.port;
+      openServer();
+    }
     console.log(meta);
   });
 };
