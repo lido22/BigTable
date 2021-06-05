@@ -42,5 +42,62 @@ function writeMeta(meta) {
 }
 
 const socket = startConnection('http://localhost:3000');
+const serverSocket = startConnection('http://localhost:8080');
 
 let metaTable = loadMetaData();
+// test
+function test() {
+  setTimeout(() => {
+    serverSocket.emit('set', {
+      row: {
+        ID: 1,
+        Region: 'ec',
+      },
+      object: {
+        Name: 'abozied',
+      },
+    });
+  }, 1000);
+  setTimeout(() => {
+    console.log('deleting name');
+    serverSocket.emit('deleteCells', {
+      row: {
+        ID: 1,
+        Region: 'ec',
+      },
+      object: {
+        Name: '',
+      },
+    });
+  }, 5000);
+
+  serverSocket.emit('delete', {
+    ID: 1,
+    Region: 'ec',
+  });
+  serverSocket.emit('addRow', {
+    object: {
+      Name: 'walid',
+      Data: '1/7/2021',
+      Artist: 'HBO',
+      URL: 'https://youtube.com',
+      Streams: '19270',
+      Position: 2,
+      // ID:1,
+      Region: 'ec',
+    },
+  });
+  serverSocket.emit('readRows', [
+    {
+      ID: 1,
+      Region: 'ec',
+    },
+    {
+      ID: 2,
+      Region: 'ec',
+    },
+  ]);
+  serverSocket.on('sendingRows', (tracks) => {
+    console.log(tracks);
+  });
+}
