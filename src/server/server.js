@@ -35,18 +35,22 @@ async function DeleteRow(row) {
   await Track.findOneAndRemove(row);
 }
 //to-do
-async function AddRow(row, obj) {
-  obj.ID = row;
+async function AddRow(obj) {
+  
   const track = new Track(obj);
   await track.save();
 }
 
 async function ReadRows(rows) {
   tracks = [];
+
   rows.forEach(async (row) => {
     const track = await Track.findOne(row);
     tracks.push(track);
+    console.log(track)
   });
+
+
   return tracks;
 }
 
@@ -99,3 +103,26 @@ function writeMeta(meta) {
 
 const socket = connectMaster('http://localhost:3000');
 server.listen(8080, () => console.log('server started'));
+io.on('connection',(socket)=>{
+  socket.on('set',(req)=>{
+    set(req.row,req.object);
+  })
+  socket.on('addRow',(req)=>{
+    AddRow(req.object);
+  })
+  socket.on('delete',(req)=>{
+    console.log(req);
+    DeleteRow(req);
+  })
+  socket.on('deleteCells',(req)=>{
+    DeleteCells(req.row,req.object);
+  })
+  socket.on('readRows',(req)=>{
+    
+    ReadRows(req).then(tracks=>{
+      console.log(tracks)
+      socket.emit("sendingRows",tracks)
+    });
+
+  })
+})
