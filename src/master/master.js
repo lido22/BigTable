@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const http = require('http');
 const Track = require('../common/track.model');
-const master = http.createServer();
-const io = require('socket.io')(master);
+const masterToServer = http.createServer();
+const masterToClient = http.createServer();
 
 //connect to database
 const url = 'mongodb://127.0.0.1:27017/tracks';
@@ -23,6 +23,8 @@ let socketsCount = 0;
 let tabletsCounts = [];
 let portMap = {};
 
+let clientSockets = [];
+
 function isPortTaken(port) {
   let taken = 0;
   Object.values(portMap).forEach((p) => {
@@ -31,10 +33,28 @@ function isPortTaken(port) {
   return taken;
 }
 
+function handleClientConnection() {
+  const io = require('socket.io')(masterToClient);
+  io.on('connection', (socket) => {
+    clientSockets.push(socket);
+
+    console.log('client connected!!!');
+
+    // read meta from disk then send to client
+    fs.readFile('./src/master/metadata.json', (err, data) => {
+      if (err) throw err;
+      const meta = JSON.parse(data);
+      socket.emit('get-meta', meta);
+    });
+  });
+}
+
 makeTablets().then((tabletMarkers) => {
   const regions = tabletMarkers.map((marker) => marker._id);
 
   const meta = updateMeta(regions);
+
+  const io = require('socket.io')(masterToServer);
 
   io.on('connection', (socket) => {
     sockets.push(socket);
@@ -56,7 +76,8 @@ makeTablets().then((tabletMarkers) => {
   writeMeta(meta);
 });
 
-master.listen(3000, () => console.log('server started'));
+masterToServer.listen(3000, () => console.log('server started'));
+masterToClient.listen(3001);
 
 async function makeTablets() {
   const aggregatorOpts = [
@@ -94,9 +115,15 @@ function writeMeta(meta) {
 }
 
 async function sendMeta(meta) {
+  // send meta to all servers
   for (const socket of sockets) {
     console.log(meta[socket.id]);
     socket.emit('get-meta', meta[socket.id]);
+  }
+
+  // send meta to all clients
+  for (const socket of clientSockets) {
+    socket.emit('get-meta', meta);
   }
 }
 
@@ -117,7 +144,9 @@ async function loadBalancing(addedRows = []) {
 function updateMeta(sortedRegions) {
   // no servers
   if (socketsCount === 0) {
-    return []; // empty meta
+    const meta = {};
+    sendMeta(meta);
+    return meta; // empty meta
   }
 
   if (socketsCount < 2) {
@@ -165,3 +194,5 @@ function updateMeta(sortedRegions) {
 
   return meta;
 }
+
+handleClientConnection();

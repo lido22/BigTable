@@ -1,14 +1,9 @@
 {
-  "XIuWJ6Vp112vg1f9AAAF": {
+  "CDAUSknkcBGuAmMKAAAB": {
     "regions": [
       "ec",
+      "it",
       "fr"
-    ],
-    "port": 8081
-  },
-  "qAqY-PdgUBfd3wg4AAAH": {
-    "regions": [
-      "it"
     ],
     "port": 8080
   }
