@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "loadDB": "mongoimport --host=localhost:27017 --db tracks --collection tracks --drop --file ./trackUpdate.json --jsonArray"
   },
   "author": "",
   "license": "ISC",

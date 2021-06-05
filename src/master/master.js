@@ -8,6 +8,11 @@ const io = require('socket.io')(master);
 //connect to database
 const url = 'mongodb://127.0.0.1:27017/tracks';
 const dbName = 'tracks';
+
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
+
 mongoose
   .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB...'))
@@ -15,25 +20,35 @@ mongoose
 
 async function makeTablets() {
   let tabletMarkers = [];
-  const ec = await Track.find({ ID: /^ec/ }).sort({ ID: 1 });
+  const ec = await Track.find({ Region: 'ec' }).sort({ ID: 1 });
   // console.log(ec[0].ID)
   // console.log(ec[ec.length-1].ID)
-  tabletMarkers.push(ec[0].ID);
-  tabletMarkers.push(ec[ec.length - 1].ID);
+  tabletMarkers.push({ Region: ec[0].Region, ID: ec[0].ID });
+  tabletMarkers.push({
+    Region: ec[ec.length - 1].Region,
+    ID: ec[ec.length - 1].ID,
+  });
 
   // console.log('fr')
-  const fr = await Track.find({ ID: /^fr/ }).sort({ ID: 1 });
+  const fr = await Track.find({ Region: 'fr' }).sort({ ID: 1 });
   // console.log(fr[0].ID)
   // console.log(fr[fr.length-1].ID)
-  tabletMarkers.push(fr[0].ID);
-  tabletMarkers.push(fr[fr.length - 1].ID);
+  tabletMarkers.push({ Region: fr[0].Region, ID: fr[0].ID });
+  tabletMarkers.push({
+    Region: fr[fr.length - 1].Region,
+    ID: fr[fr.length - 1].ID,
+  });
 
   // console.log('it')
-  const it = await Track.find({ ID: /^it/ }).sort({ ID: 1 });
+  const it = await Track.find({ Region: 'it' }).sort({ ID: 1 });
   // console.log(it[0].ID)
   // console.log(it[it.length-1].ID)
-  tabletMarkers.push(it[0].ID);
-  tabletMarkers.push(it[it.length - 1].ID);
+  tabletMarkers.push({ Region: it[0].Region, ID: it[0].ID });
+  tabletMarkers.push({
+    Region: it[it.length - 1].Region,
+    ID: it[it.length - 1].ID,
+  });
+
   return tabletMarkers;
 }
 makeTablets().then((tabletMarkers) => {
