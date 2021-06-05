@@ -1,6 +1,5 @@
 const http = require('http');
 const server = http.createServer();
-const io = require('socket.io')(server);
 const mongoose = require('mongoose');
 
 const clientIO = require('socket.io-client');
@@ -19,6 +18,8 @@ mongoose
   .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB...'))
   .catch((err) => console.log('Unable to connect...'));
+
+let meta = {};
 
 async function set(row, obj) {
   const track = await Track.findOneAndUpdate(row, obj);
@@ -50,31 +51,24 @@ async function ReadRows(rows) {
   return tracks;
 }
 
-/*
-const rows = [
-  { Region: 'ec', ID: 11 },
-  { Region: 'fr', ID: 54 },
-  { Region: 'it', ID: 358 },
-];
-
-ReadRows(rows)
-  .then((tracks) => {
-    console.log(tracks);
-  })
-  .catch((err) => console.log(err));
-*/
-
 function connectMaster(url) {
   const socket = clientIO(url);
   socket.on('connect', () => {
-    console.log(socket.id);
-    socket.emit('fetch-meta', socket.id);
-    socket.on('get-meta', (meta) => {
-      writeMeta(meta);
-    });
+    handleGetMeta(socket);
   });
-  console.log(socket.connected);
   return socket;
+}
+
+function openServer() {
+  server.listen(8081, () => console.log('server started'));
+  const io = require('socket.io')(server);
+  io.on('connection', (socket) => {
+    handleSet(socket);
+    handleAddRow(socket);
+    handleDelete(socket);
+    handleDeleteCells(socket);
+    handleReadRows(socket);
+  });
 }
 
 function loadMetaData() {
@@ -99,26 +93,46 @@ function writeMeta(meta) {
   );
 }
 
-const socket = connectMaster('http://localhost:3000');
-server.listen(8080, () => console.log('server started'));
-io.on('connection', (socket) => {
-  socket.on('set', (req) => {
-    set(req.row, req.object);
+connectMaster('http://localhost:3000');
+openServer();
+
+const handleGetMeta = (socket) => {
+  socket.on('get-meta', (newMeta) => {
+    meta = newMeta;
+    console.log(meta);
   });
-  socket.on('addRow', (req) => {
-    AddRow(req.object);
-  });
+};
+
+const handleDelete = (socket) => {
   socket.on('delete', (req) => {
     console.log(req);
     DeleteRow(req);
   });
+};
+
+const handleDeleteCells = (socket) => {
   socket.on('deleteCells', (req) => {
     DeleteCells(req.row, req.object);
   });
+};
+
+const handleAddRow = (socket) => {
+  socket.on('addRow', (req) => {
+    AddRow(req.object);
+  });
+};
+
+const handleSet = (socket) => {
+  socket.on('set', (req) => {
+    set(req.row, req.object);
+  });
+};
+
+const handleReadRows = (socket) => {
   socket.on('readRows', (req) => {
     ReadRows(req).then((tracks) => {
       console.log(tracks);
       socket.emit('sendingRows', tracks);
     });
   });
-});
+};

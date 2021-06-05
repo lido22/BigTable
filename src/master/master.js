@@ -18,9 +18,8 @@ mongoose
   .then(() => console.log('Connected to MongoDB...'))
   .catch((err) => console.log('Unable to connect...'));
 
-const sockets = [];
-const socketsCount = 0;
-const socketsMap = {};
+let sockets = [];
+let socketsCount = 0;
 let tabletsCounts = [];
 
 makeTablets().then((tabletMarkers) => {
@@ -30,10 +29,14 @@ makeTablets().then((tabletMarkers) => {
 
   io.on('connection', (socket) => {
     sockets.push(socket);
-    socketsMap[socket.id] = socketsCount++;
+    socketsCount++;
 
-    socket.on('fetch-meta', (room) => {
-      socket.emit('get-meta', meta[socketsMap[socket.id]]);
+    loadBalancing();
+
+    socket.on('disconnect', () => {
+      sockets = sockets.filter((v) => v.id !== socket.id);
+      socketsCount--;
+      loadBalancing();
     });
   });
   console.log(tabletsCounts);
@@ -77,7 +80,14 @@ function writeMeta(meta) {
   );
 }
 
-async function loadBalancing(addedRows) {
+async function sendMeta(meta) {
+  for (const socket of sockets) {
+    console.log(meta[socket.id]);
+    socket.emit('get-meta', meta[socket.id]);
+  }
+}
+
+async function loadBalancing(addedRows = []) {
   addedRows.forEach((addedRow) => {
     tabletsCounts[addedRow.region] =
       tabletsCounts[addedRow.region] || 0 + addedRow.count;
@@ -92,6 +102,23 @@ async function loadBalancing(addedRows) {
 }
 
 function updateMeta(sortedRegions) {
+  if (socketsCount < 2) {
+    // no servers
+    if (socketsCount === 0) {
+      return []; // empty meta
+    }
+    // if one server connected
+    const meta = {
+      [sockets[0].id]: {
+        regions: sortedRegions,
+      },
+    };
+
+    sendMeta(meta);
+
+    return meta;
+  }
+
   const firstServerRegions = [];
   const secondServerRegions = [];
   for (
@@ -107,13 +134,17 @@ function updateMeta(sortedRegions) {
     }
     servers[i % 2].push(sortedRegions[i], sortedRegions[j]);
   }
-  const meta = [
-    {
+
+  const meta = {
+    [sockets[0].id]: {
       regions: firstServerRegions,
     },
-    {
+    [sockets[1].id]: {
       regions: secondServerRegions,
     },
-  ];
+  };
+
+  sendMeta(meta);
+
   return meta;
 }

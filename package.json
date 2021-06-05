@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "loadDB": "mongoimport --host=localhost:27017 --db tracks --collection tracks --drop --file ./trackUpdate.json --jsonArray",
-    "master" : "node ./src/master/master.js"
+    "master": "node ./src/master/master.js",
+    "server": "node ./src/server/server.js",
+    "client": "node ./src/client/client.js"
   },
   "author": "",
   "license": "ISC",
