@@ -18,6 +18,10 @@ mongoose
   .then(() => console.log('Connected to MongoDB...'))
   .catch((err) => console.log('Unable to connect...'));
 
+const sockets = [];
+const socketsCount = 0;
+const socketsMap = {};
+
 async function makeTablets() {
   let tabletMarkers = [];
   const ec = await Track.find({ Region: 'ec' }).sort({ ID: 1 });
@@ -55,21 +59,27 @@ makeTablets().then((tabletMarkers) => {
   var randomBoolean = Math.random() < 0.5;
   var server1Lenght = randomBoolean ? tabletMarkers[3] : tabletMarkers[1];
   var server2Start = randomBoolean ? tabletMarkers[4] : tabletMarkers[2];
-  meta = {
-    tabletServer1: {
+
+  const meta = [
+    {
       startKey: tabletMarkers[0],
       endKey: server1Lenght,
     },
-    tabletServer2: {
+    {
       startKey: server2Start,
       endKey: tabletMarkers[5],
     },
-  };
+  ];
+
   io.on('connection', (socket) => {
+    sockets.push(socket);
+    socketsMap[socket.id] = socketsCount++;
+
     socket.on('fetch-meta', (room) => {
-      socket.emit('get-meta', meta);
+      socket.emit('get-meta', meta[socketsMap[socket.id]]);
     });
   });
+
   writeMeta(meta);
 });
 
