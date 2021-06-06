@@ -12,23 +12,16 @@ function startMasterConnection(url) {
   return socket;
 }
 
-function sendrequest(requestType, data, socket) {
-  socket.emit(requestType, JSON.stringify(data), socket.id);
-}
-
 const masterSocket = startMasterConnection('http://localhost:3001');
-//const serverSocket = startConnection('http://localhost:8080');
 
 const handleGetMeta = (socket) => {
   socket.on('get-meta', (newMeta) => {
     meta = newMeta;
-    console.log(meta);
   });
 };
 
 const getServerSocket = (region) => {
   let port = 0;
-  console.log(meta);
 
   Object.values(meta).forEach((v) => {
     v.regions.forEach((r) => {
@@ -37,10 +30,17 @@ const getServerSocket = (region) => {
   });
 
   const url = `http://localhost:${port}`;
-  console.log(url);
+
   const serverSocket = io(url);
 
   serverSocket.on('done', () => {
+    serverSocket.close();
+  });
+
+  serverSocket.on('sendingRows', (tracks) => {
+    console.log(tracks);
+
+    // close socket
     serverSocket.close();
   });
 
@@ -75,7 +75,7 @@ async function test2() {
   const req = {
     row: {
       Region: 'it',
-      ID: 10,
+      ID: 11,
     },
   };
 
@@ -89,16 +89,12 @@ async function test3() {
   // addRow
   const req = [
     {
-      Region: 'it',
-      ID: 22,
+      Region: 'fr',
+      ID: 2,
     },
     {
       Region: 'ec',
       ID: 21,
-    },
-    {
-      Region: 'it',
-      ID: 20,
     },
   ];
 
@@ -113,10 +109,9 @@ async function test4() {
   const req = {
     row: {
       Region: 'fr',
+      ID: 3,
     },
-    object: {
-      Name: undefined,
-    },
+    cells: ['URL', 'Name'],
   };
 
   // get serverSocket
@@ -139,4 +134,4 @@ setTimeout(() => {
 
 setTimeout(() => {
   test4();
-}, 4000);
+}, 1000);

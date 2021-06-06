@@ -5,9 +5,15 @@ const Track = require('../common/track.model');
 const masterToServer = http.createServer();
 const masterToClient = http.createServer();
 
+const {
+  set,
+  DeleteCells,
+  DeleteRow,
+  AddRow,
+} = require('../common/track.service');
+
 //connect to database
 const url = 'mongodb://127.0.0.1:27017/tracks';
-const dbName = 'tracks';
 
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
@@ -25,6 +31,8 @@ let portMap = {};
 
 let clientSockets = [];
 
+let meta = {};
+
 function isPortTaken(port) {
   let taken = 0;
   Object.values(portMap).forEach((p) => {
@@ -40,12 +48,7 @@ function handleClientConnection() {
 
     console.log('client connected!!!');
 
-    // read meta from disk then send to client
-    fs.readFile('./src/master/metadata.json', (err, data) => {
-      if (err) throw err;
-      const meta = JSON.parse(data);
-      socket.emit('get-meta', meta);
-    });
+    socket.emit('get-meta', meta);
   });
 }
 
@@ -76,9 +79,12 @@ makeTablets().then((tabletMarkers) => {
     socket.on('addedRows', (addedRows) => {
       loadBalancing(addedRows);
     });
+
+    socket.on('update', (dataUpdate) => {
+      handleDataBaseUpdate(dataUpdate);
+    });
   });
   console.log(tabletsCounts);
-  writeMeta(meta);
 });
 
 masterToServer.listen(3000, () => console.log('server started'));
@@ -151,29 +157,36 @@ async function loadBalancing(addedRows = []) {
     (a, b) => tabletsCounts[a] - tabletsCounts[b]
   );
 
-  const meta = updateMeta(sortedRegions);
-  writeMeta(meta);
+  updateMeta(sortedRegions);
 }
 
 function updateMeta(sortedRegions) {
   // no servers
   if (socketsCount === 0) {
-    const meta = {};
-    sendMeta(meta);
+    const oldMeta = meta;
+    meta = {};
+    if (oldMeta !== meta) {
+      sendMeta(meta);
+      writeMeta(meta);
+    }
     return meta; // empty meta
   }
 
   if (socketsCount < 2) {
     // if one server connected
-    const meta = {
+    const oldMeta = meta;
+    meta = {
       [sockets[0].id]: {
         regions: sortedRegions,
         port: portMap[sockets[0].id],
       },
     };
 
-    sendMeta(meta);
-    sendDB(meta);
+    if (oldMeta !== meta) {
+      sendMeta(meta);
+      sendDB(meta);
+      writeMeta(meta);
+    }
 
     return meta;
   }
@@ -194,7 +207,8 @@ function updateMeta(sortedRegions) {
     servers[i % 2].push(sortedRegions[i], sortedRegions[j]);
   }
 
-  const meta = {
+  const oldMeta = meta;
+  meta = {
     [sockets[0].id]: {
       regions: firstServerRegions,
       port: portMap[sockets[0].id],
@@ -205,10 +219,45 @@ function updateMeta(sortedRegions) {
     },
   };
 
-  sendMeta(meta);
-  sendDB(meta);
+  if (oldMeta !== meta) {
+    sendMeta(meta);
+    sendDB(meta);
+    writeMeta(meta);
+  }
 
   return meta;
 }
+
+const handleDataBaseUpdate = (dataUpdate) => {
+  const addedRows = {};
+  for (const update of dataUpdate) {
+    switch (update.type) {
+      case 'set':
+        set(update.req.row, update.req.object).then();
+        break;
+      case 'deleteCells':
+        DeleteCells(update.req.row, update.req.cells).then();
+        addedRows[update.req.row.Region] =
+          addedRows[update.req.row.Region] || 0 - 1;
+        break;
+      case 'delete':
+        DeleteRow(update.req.row).then();
+        break;
+      case 'addRow':
+        AddRow(update.req.object).then();
+        addedRows[update.req.row.Region] =
+          addedRows[update.req.row.Region] || 0 + 1;
+        break;
+      default:
+        break;
+    }
+  }
+
+  const addedRowsArr = Object.entries(addedRows).map((e) => {
+    return { region: e[0], count: e[1] };
+  });
+
+  if (addedRowsArr.length > 0) loadBalancing(addedRowsArr);
+};
 
 handleClientConnection();

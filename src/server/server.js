@@ -9,7 +9,13 @@ const clientIO = require('socket.io-client');
 const fs = require('fs');
 const Track = require('../common/track.model');
 
-//connect to database
+const {
+  set,
+  DeleteCells,
+  DeleteRow,
+  AddRow,
+  ReadRows,
+} = require('../common/track.service');
 
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
@@ -18,41 +24,13 @@ mongoose.set('useCreateIndex', true);
 let meta = {};
 let port = undefined;
 
-async function set(row, obj) {
-  return await Track.findOneAndUpdate(row, obj);
-}
+let dataUpdate = [];
 
-async function DeleteCells(row, obj) {
-  return await Track.findOneAndUpdate(row, obj);
-}
-// DeleteCells(1, {Name:"", Date:"", Position:""})
+setInterval(() => {
+  masterSocket.emit('update', dataUpdate);
 
-async function DeleteRow(row) {
-  return await Track.findOneAndRemove(row);
-}
-//to-do
-async function AddRow(obj) {
-  const lastTrack = await Track.findOne({ Region: obj.Region })
-    .sort({ ID: -1 })
-    .limit(1);
-
-  const lastID = lastTrack.ID;
-
-  obj.ID = lastID + 1;
-
-  const track = new Track(obj);
-  return track.save();
-}
-
-async function ReadRows(rows) {
-  tracks = [];
-  for (const row of rows) {
-    const track = await Track.findOne(row);
-    tracks.push(track);
-  }
-
-  return tracks;
-}
+  dataUpdate = [];
+}, 10000); // every 10 serconds update master
 
 function connectMaster(url) {
   const socket = clientIO(url);
@@ -116,7 +94,7 @@ const handleDelete = (socket) => {
         .then((row) => {
           if (row) {
             console.log(`Deleted Row ${row.ID} - ${row.Region}`);
-            handleAddAndDelete([{ region: row.Region, count: -1 }]);
+            dataUpdate.push({ req, type: 'delete' });
           }
 
           sendDoneEvent(socket);
@@ -130,9 +108,16 @@ const handleDelete = (socket) => {
 const handleDeleteCells = (socket) => {
   socket.on('deleteCells', (req) => {
     lock.acquire(req.row.Region, function (done) {
-      DeleteCells(req.row, req.object)
-        .then(() => sendDoneEvent(socket))
-        .then(done);
+      DeleteCells(req.row, req.cells)
+        .then((row) => {
+          if (row) {
+            console.log(row);
+            dataUpdate.push({ req, type: 'deleteCells' });
+          }
+          sendDoneEvent(socket);
+          done();
+        })
+        .catch(console.log);
     });
   });
 };
@@ -148,7 +133,7 @@ const handleAddRow = (socket) => {
         AddRow(req.object)
           .then((row) => {
             console.log(`Added Row ${row.ID} - ${row.Region}`);
-            handleAddAndDelete([{ region: row.Region, count: 1 }]);
+            dataUpdate.push({ req, type: 'addRow' });
             sendDoneEvent(socket);
           })
           .catch(console.log);
@@ -160,8 +145,10 @@ const handleSet = (socket) => {
   socket.on('set', (req) => {
     lock.acquire(req.row.Region, function (done) {
       set(req.row, req.object)
-        .then(() => sendDoneEvent(socket))
-        .then(done);
+        .then(sendDoneEvent(socket))
+        .then(dataUpdate.push({ req, type: 'set' }))
+        .then(done)
+        .catch(console.log);
     });
   });
 };
@@ -175,15 +162,13 @@ const handleReadRows = (socket) => {
         done();
       }
     );
-    ReadRows(req).then((tracks) => {
-      console.log(tracks);
-      socket.emit('sendingRows', tracks);
-    });
+    ReadRows(req)
+      .then((tracks) => {
+        //console.log(tracks);
+        socket.emit('sendingRows', tracks);
+      })
+      .catch(console.log);
   });
-};
-
-const handleAddAndDelete = (addedRows) => {
-  masterSocket.emit('addedRows', addedRows);
 };
 
 const sendDoneEvent = (socket) => {

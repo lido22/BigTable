@@ -12,20 +12,16 @@ const tracksSchema = mongoose.Schema({
   },
   Position: {
     type: Number,
-    required: true,
   },
   Name: {
     type: String,
-    required: true,
   },
   Artist: String,
   Streams: {
     type: String,
-    required: true,
   },
   URL: {
     type: String,
-    required: true,
   },
   Date: String,
 });
