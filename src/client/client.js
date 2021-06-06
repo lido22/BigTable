@@ -1,11 +1,15 @@
 const io = require('socket.io-client');
+const logger = require("../logger");
+
 
 let meta = {};
 
+logger.openLog("client.log");
 function startMasterConnection(url) {
   const socket = io(url);
 
   socket.on('connect', () => {
+    logger.log('connecting to master');
     handleGetMeta(socket);
   });
 
@@ -17,6 +21,7 @@ const masterSocket = startMasterConnection('http://localhost:3001');
 const handleGetMeta = (socket) => {
   socket.on('get-meta', (newMeta) => {
     meta = newMeta;
+    logger.log('meta data recieved');
   });
 };
 
@@ -32,13 +37,17 @@ const getServerSocket = (region) => {
   const url = `http://localhost:${port}`;
 
   const serverSocket = io(url);
+  logger.log('connecting to server');
 
   serverSocket.on('done', () => {
+    logger.log('connection closed');
+
     serverSocket.close();
   });
 
   serverSocket.on('sendingRows', (tracks) => {
     console.log(tracks);
+    logger.log('reciving rows data');
 
     // close socket
     serverSocket.close();
@@ -49,6 +58,8 @@ const getServerSocket = (region) => {
 
 async function test1() {
   // addRow
+  logger.log('Adding a row');
+
   const req = {
     row: {
       Region: 'ec',
@@ -71,7 +82,9 @@ async function test1() {
 }
 
 async function test2() {
-  // addRow
+  logger.log('deleting a row');
+
+  // deleteRow
   const req = {
     row: {
       Region: 'it',
@@ -86,7 +99,9 @@ async function test2() {
 }
 
 async function test3() {
-  // addRow
+  logger.log('reading rows');
+
+  // readRows
   const req = [
     {
       Region: 'fr',
@@ -105,7 +120,9 @@ async function test3() {
 }
 
 async function test4() {
-  // addRow
+  logger.log('deleting cells from a row');
+
+  // deletecells
   const req = {
     row: {
       Region: 'fr',

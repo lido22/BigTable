@@ -8,7 +8,7 @@ const lock = new AsyncLock();
 const clientIO = require('socket.io-client');
 const fs = require('fs');
 const Track = require('../common/track.model');
-
+const logger = require("../logger");
 const {
   set,
   DeleteCells,
@@ -20,6 +20,8 @@ const {
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
+// start log file
+logger.openLog("server.log");
 
 let meta = {};
 let port = undefined;
@@ -35,6 +37,7 @@ setInterval(() => {
 function connectMaster(url) {
   const socket = clientIO(url);
   socket.on('connect', () => {
+    logger.log("connecting to master");
     handleGetMeta(socket);
     handleGetDB(socket);
   });
@@ -47,11 +50,13 @@ function openServer() {
 
     const io = require('socket.io')(server);
     io.on('connection', (socket) => {
+      logger.log("A client has been connected");
       handleSet(socket);
       handleAddRow(socket);
       handleDelete(socket);
       handleDeleteCells(socket);
       handleReadRows(socket);
+
     });
   });
 }
@@ -65,12 +70,14 @@ const handleGetMeta = (socket) => {
       port = meta.port;
       openServer();
     }
+    logger.log("receiving meta data");
     console.log(meta);
   });
 };
 
 const handleGetDB = (socket) => {
   socket.on('get-db', (db) => {
+    logger.log("receiving data base ");
     // connect to db
     const url = `mongodb://127.0.0.1:27017/tracks${meta.port % 10}`;
     console.log(url);
@@ -102,6 +109,8 @@ const handleDelete = (socket) => {
         })
         .catch(console.log);
     });
+    logger.log("A row has been deleted");
+
   });
 };
 
@@ -119,6 +128,7 @@ const handleDeleteCells = (socket) => {
         })
         .catch(console.log);
     });
+    logger.log("row cells has been deleted");
   });
 };
 
@@ -138,6 +148,7 @@ const handleAddRow = (socket) => {
           })
           .catch(console.log);
       });
+      logger.log("A row has been added");
   });
 };
 
@@ -150,6 +161,7 @@ const handleSet = (socket) => {
         .then(done)
         .catch(console.log);
     });
+    logger.log("row data has been changed");
   });
 };
 
@@ -168,9 +180,11 @@ const handleReadRows = (socket) => {
         socket.emit('sendingRows', tracks);
       })
       .catch(console.log);
+      logger.log("reading some rows data");
   });
 };
 
 const sendDoneEvent = (socket) => {
+  logger.log("diconnecting client");
   socket.emit('done');
 };

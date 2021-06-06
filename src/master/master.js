@@ -4,6 +4,7 @@ const http = require('http');
 const Track = require('../common/track.model');
 const masterToServer = http.createServer();
 const masterToClient = http.createServer();
+const logger = require("../logger");
 
 const {
   set,
@@ -23,6 +24,9 @@ mongoose
   .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB...'))
   .catch((err) => console.log('Unable to connect...'));
+
+console.log(logger)
+logger.openLog("master.log");
 
 let sockets = [];
 let socketsCount = 0;
@@ -47,8 +51,10 @@ function handleClientConnection() {
     clientSockets.push(socket);
 
     console.log('client connected!!!');
+    logger.log("A client has been connected");
 
     socket.emit('get-meta', meta);
+    logger.log("sending meta data to client");
   });
 }
 
@@ -62,17 +68,19 @@ makeTablets().then((tabletMarkers) => {
 
   io.on('connection', (socket) => {
     sockets.push(socket);
+    logger.log("A server has been connected");
     socketsCount++;
-
+    
     if (!isPortTaken(8080)) portMap[socket.id] = 8080;
     else portMap[socket.id] = 8081;
 
     loadBalancing();
-
+    
     socket.on('disconnect', () => {
       sockets = sockets.filter((v) => v.id !== socket.id);
       portMap[socket.id] = undefined;
       socketsCount--;
+      logger.log("A server has been disconnected");
       loadBalancing();
     });
 
@@ -116,7 +124,7 @@ async function makeTablets() {
 //writing metadata
 function writeMeta(meta) {
   fs.writeFile(
-    './src/master/metadata.json',
+    './master/metadata.json',
     JSON.stringify(meta, null, 2),
     function (err) {
       if (err) throw err;
@@ -126,11 +134,16 @@ function writeMeta(meta) {
 }
 
 async function sendMeta(meta) {
+  if(sockets.length !== 0) 
+    logger.log("sending meta data to servers");
+
   // send meta to all servers
   for (const socket of sockets) {
     //console.log(meta[socket.id]);
     socket.emit('get-meta', meta[socket.id]);
   }
+  if(clientSockets.length !== 0) 
+    logger.log("sending meta data to clients");
 
   // send meta to all clients
   for (const socket of clientSockets) {
@@ -139,6 +152,7 @@ async function sendMeta(meta) {
 }
 
 async function sendDB(meta) {
+  logger.log("sending tablets to servers");
   // send DB to all servers
   for (const socket of sockets) {
     const regions = meta[socket.id].regions;
@@ -156,6 +170,7 @@ async function loadBalancing(addedRows = []) {
   const sortedRegions = Object.keys(tabletsCounts).sort(
     (a, b) => tabletsCounts[a] - tabletsCounts[b]
   );
+  logger.log("load balancing has been triggred ");
 
   updateMeta(sortedRegions);
 }
