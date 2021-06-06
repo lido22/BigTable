@@ -15,7 +15,7 @@ function startMasterConnection(url) {
   return socket;
 }
 
-const masterSocket = startMasterConnection('http://localhost:3001');
+const masterSocket = startMasterConnection(process.env.MASTER_TO_CLIENT);
 
 const handleGetMeta = (socket) => {
   socket.on('get-meta', (newMeta) => {
@@ -25,15 +25,13 @@ const handleGetMeta = (socket) => {
 };
 
 const getServerSocket = (region) => {
-  let port = 0;
+  let url = 0;
 
   Object.values(meta).forEach((v) => {
     v.regions.forEach((r) => {
-      if (r === region) port = v.port;
+      if (r === region) url = v.url;
     });
   });
-
-  const url = `http://localhost:${port}`;
 
   const serverSocket = io(url);
   logger.log('connecting to server');

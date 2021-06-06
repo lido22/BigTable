@@ -6,14 +6,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "loadDB": "mongoimport --host=localhost:27017 --db tracks --collection tracks --drop --file ./trackUpdate.json --jsonArray",
-    "master": "node ./src/master.js",
-    "server": "node ./src/server.js",
-    "client": "node ./src/client.js"
+    "master": "node -r dotenv/config ./src/master.js",
+    "server": "node -r dotenv/config ./src/server.js",
+    "client": "node -r dotenv/config ./src/client.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "async-lock": "^1.3.0",
+    "dotenv": "^10.0.0",
     "moment": "^2.29.1",
     "mongoose": "^5.12.12",
     "socket.io": "^4.1.2",

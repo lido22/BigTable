@@ -1,11 +1,11 @@
 {
-  "C9lxJfaY8b8EifgRAAAD": {
+  "J9Lra_b2PlisanlfAAAB": {
     "regions": [
-      "ab",
       "it",
-      "ec",
-      "fr"
+      "fr",
+      "ec"
     ],
-    "port": 8080
+    "port": 8080,
+    "url": "http://localhost:8080"
   }
 }

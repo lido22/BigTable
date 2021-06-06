@@ -34,6 +34,7 @@ let sockets = [];
 let socketsCount = 0;
 let tabletsCounts = [];
 let portMap = {};
+let urlMap = {};
 
 let clientSockets = [];
 
@@ -73,6 +74,8 @@ makeTablets().then((tabletMarkers) => {
     logger.log('A server has been connected');
     socketsCount++;
 
+    urlMap[socket.id] = socket.request._query['url'];
+
     if (!isPortTaken(8080)) portMap[socket.id] = 8080;
     else portMap[socket.id] = 8081;
 
@@ -81,14 +84,14 @@ makeTablets().then((tabletMarkers) => {
     socket.on('disconnect', () => {
       sockets = sockets.filter((v) => v.id !== socket.id);
       portMap[socket.id] = undefined;
+      urlMap[socket.id] = undefined;
       socketsCount--;
       logger.log('A server has been disconnected');
       loadBalancing();
     });
 
     socket.on('update', (dataUpdate) => {
-      if(dataUpdate.length)
-        logger.log("Updating orignal tables");
+      if (dataUpdate.length) logger.log('Updating orignal tables');
       handleDataBaseUpdate(dataUpdate);
     });
   });
@@ -174,6 +177,9 @@ async function loadBalancing(addedRows = []) {
 }
 
 function updateMeta(sortedRegions) {
+  // TODO
+  // DEEP EQUAL META DATA
+
   // no servers
   if (socketsCount === 0) {
     const oldMeta = meta;
@@ -192,6 +198,7 @@ function updateMeta(sortedRegions) {
       [sockets[0].id]: {
         regions: sortedRegions,
         port: portMap[sockets[0].id],
+        url: urlMap[sockets[0].id],
       },
     };
 
@@ -225,10 +232,12 @@ function updateMeta(sortedRegions) {
     [sockets[0].id]: {
       regions: firstServerRegions,
       port: portMap[sockets[0].id],
+      url: urlMap[sockets[0].id],
     },
     [sockets[1].id]: {
       regions: secondServerRegions,
       port: portMap[sockets[1].id],
+      url: urlMap[sockets[1].id],
     },
   };
 

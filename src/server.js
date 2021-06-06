@@ -37,7 +37,7 @@ myEmitter.on('update-event', () => {
 });
 
 function connectMaster(url) {
-  const socket = clientIO(url);
+  const socket = clientIO(url, { query: `url=${process.env.SERVER}` });
   socket.on('connect', () => {
     logger.log('connecting to master');
     handleGetMeta(socket);
@@ -62,7 +62,7 @@ function openServer() {
   });
 }
 
-const masterSocket = connectMaster('http://localhost:3000');
+const masterSocket = connectMaster(process.env.MASTER_TO_SERVER);
 
 const handleGetMeta = (socket) => {
   socket.on('get-meta', (newMeta) => {
