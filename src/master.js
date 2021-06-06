@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 const fs = require('fs');
 const http = require('http');
-const Track = require('../common/track.model');
+const Track = require('./common/track.model');
 const masterToServer = http.createServer();
 const masterToClient = http.createServer();
-const logger = require('../logger');
+const logger = require('./logs/logger');
 const AsyncLock = require('async-lock');
 const lock = new AsyncLock();
 
@@ -13,7 +13,7 @@ const {
   DeleteCells,
   DeleteRow,
   AddRow,
-} = require('../common/track.service');
+} = require('./common/track.service');
 
 //connect to database
 const url = 'mongodb://127.0.0.1:27017/tracks';
@@ -86,12 +86,9 @@ makeTablets().then((tabletMarkers) => {
       loadBalancing();
     });
 
-    socket.on('addedRows', (addedRows) => {
-      loadBalancing(addedRows);
-    });
-
     socket.on('update', (dataUpdate) => {
-      console.log('UPDATED!!!!!!!');
+      if(dataUpdate.length)
+        logger.log("Updating orignal tables");
       handleDataBaseUpdate(dataUpdate);
     });
   });
@@ -127,7 +124,7 @@ async function makeTablets() {
 //writing metadata
 function writeMeta(meta) {
   fs.writeFile(
-    './src/master/metadata.json',
+    './src/metadata.json',
     JSON.stringify(meta, null, 2),
     function (err) {
       if (err) throw err;
@@ -152,13 +149,13 @@ async function sendMeta(meta) {
   }
 }
 
-async function sendDB(meta) {
+async function sendTablets(meta) {
   logger.log('sending tablets to servers');
-  // send DB to all servers
+  // send tablets to all servers
   for (const socket of sockets) {
     const regions = meta[socket.id].regions;
     const tracks = await Track.find({ Region: { $in: regions } });
-    socket.emit('get-db', tracks);
+    socket.emit('get-tablets', tracks);
   }
 }
 
@@ -200,7 +197,7 @@ function updateMeta(sortedRegions) {
 
     if (oldMeta !== meta) {
       sendMeta(meta);
-      sendDB(meta);
+      sendTablets(meta);
       writeMeta(meta);
     }
 
@@ -237,7 +234,7 @@ function updateMeta(sortedRegions) {
 
   if (oldMeta !== meta) {
     sendMeta(meta);
-    sendDB(meta);
+    sendTablets(meta);
     writeMeta(meta);
   }
 

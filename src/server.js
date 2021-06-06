@@ -7,8 +7,8 @@ const lock = new AsyncLock();
 
 const clientIO = require('socket.io-client');
 const fs = require('fs');
-const Track = require('../common/track.model');
-const logger = require('../logger');
+const Track = require('./common/track.model');
+const logger = require('./logs/logger');
 const EventEmitter = require('events');
 const myEmitter = new EventEmitter();
 
@@ -18,7 +18,7 @@ const {
   DeleteRow,
   AddRow,
   ReadRows,
-} = require('../common/track.service');
+} = require('./common/track.service');
 
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
@@ -41,7 +41,7 @@ function connectMaster(url) {
   socket.on('connect', () => {
     logger.log('connecting to master');
     handleGetMeta(socket);
-    handleGetDB(socket);
+    handleGetTablets(socket);
   });
   return socket;
 }
@@ -76,20 +76,20 @@ const handleGetMeta = (socket) => {
   });
 };
 
-const handleGetDB = (socket) => {
-  socket.on('get-db', (db) => {
-    logger.log('receiving data base ');
-    // connect to db
+const handleGetTablets = (socket) => {
+  socket.on('get-tablets', (tablets) => {
+    logger.log('receiving tablets');
+    // connect to mongo
     const url = `mongodb://127.0.0.1:27017/tracks${meta.port % 10}`;
     console.log(url);
     mongoose
       .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
       .then(() => console.log('Connected to MongoDB...'))
       .then(async () => {
-        // create db
+        // create tablets database
         await Track.deleteMany();
-        await Track.insertMany(db);
-        console.log('Created DB');
+        await Track.insertMany(tablets);
+        console.log('Created tablets');
       })
       .catch((err) => console.log('Unable to connect...', err));
   });

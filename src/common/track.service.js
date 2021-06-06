@@ -14,6 +14,7 @@ async function DeleteCells(row, cells) {
 // DeleteCells(1, {Name:"", Date:"", Position:""})
 
 async function DeleteRow(row) {
+  //TODO use deleteMany
   return await Track.findOneAndRemove(row);
 }
 //to-do

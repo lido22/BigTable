@@ -1,5 +1,5 @@
 const io = require('socket.io-client');
-const logger = require('../logger');
+const logger = require('./logs/logger');
 
 let meta = {};
 
@@ -46,7 +46,7 @@ const getServerSocket = (region) => {
 
   serverSocket.on('sendingRows', (tracks) => {
     console.log(tracks);
-    logger.log('reciving rows data');
+    logger.log('receiving rows data');
 
     // close socket
     serverSocket.close();
@@ -84,6 +84,7 @@ async function test2() {
   logger.log('deleting a row');
 
   // deleteRow
+  //TODO: convert to array of row keys
   const req = {
     row: {
       Region: 'it',
