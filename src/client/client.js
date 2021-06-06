@@ -1,10 +1,9 @@
 const io = require('socket.io-client');
-const logger = require("../logger");
-
+const logger = require('../logger');
 
 let meta = {};
 
-logger.openLog("client.log");
+logger.openLog('client.log');
 function startMasterConnection(url) {
   const socket = io(url);
 
@@ -62,7 +61,7 @@ async function test1() {
 
   const req = {
     row: {
-      Region: 'ec',
+      Region: 'fr',
     },
     object: {
       Name: 'walid',
@@ -71,7 +70,7 @@ async function test1() {
       URL: 'https://youtube.com',
       Streams: '19270',
       Position: 2,
-      Region: 'ec',
+      Region: 'fr',
     },
   };
 
@@ -104,7 +103,7 @@ async function test3() {
   // readRows
   const req = [
     {
-      Region: 'fr',
+      Region: 'it',
       ID: 2,
     },
     {
@@ -114,7 +113,7 @@ async function test3() {
   ];
 
   // get serverSocket
-  const serverSocket = getServerSocket('it');
+  const serverSocket = getServerSocket(req[0].Region);
 
   serverSocket.emit('readRows', req);
 }
@@ -138,6 +137,7 @@ async function test4() {
 }
 
 setTimeout(() => {
+  test1();
   test1();
 }, 1000);
 

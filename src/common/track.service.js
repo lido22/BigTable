@@ -1,4 +1,6 @@
 const Track = require('./track.model');
+const AsyncLock = require('async-lock');
+const lock = new AsyncLock();
 
 async function set(row, obj) {
   return await Track.findOneAndUpdate(row, obj);
@@ -25,7 +27,8 @@ async function AddRow(obj) {
   obj.ID = lastID + 1;
 
   const track = new Track(obj);
-  return track.save();
+
+  return await track.save();
 }
 
 async function ReadRows(rows) {

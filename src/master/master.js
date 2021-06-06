@@ -4,7 +4,9 @@ const http = require('http');
 const Track = require('../common/track.model');
 const masterToServer = http.createServer();
 const masterToClient = http.createServer();
-const logger = require("../logger");
+const logger = require('../logger');
+const AsyncLock = require('async-lock');
+const lock = new AsyncLock();
 
 const {
   set,
@@ -25,8 +27,8 @@ mongoose
   .then(() => console.log('Connected to MongoDB...'))
   .catch((err) => console.log('Unable to connect...'));
 
-console.log(logger)
-logger.openLog("master.log");
+console.log(logger);
+logger.openLog('master.log');
 
 let sockets = [];
 let socketsCount = 0;
@@ -51,10 +53,10 @@ function handleClientConnection() {
     clientSockets.push(socket);
 
     console.log('client connected!!!');
-    logger.log("A client has been connected");
+    logger.log('A client has been connected');
 
     socket.emit('get-meta', meta);
-    logger.log("sending meta data to client");
+    logger.log('sending meta data to client');
   });
 }
 
@@ -68,19 +70,19 @@ makeTablets().then((tabletMarkers) => {
 
   io.on('connection', (socket) => {
     sockets.push(socket);
-    logger.log("A server has been connected");
+    logger.log('A server has been connected');
     socketsCount++;
-    
+
     if (!isPortTaken(8080)) portMap[socket.id] = 8080;
     else portMap[socket.id] = 8081;
 
     loadBalancing();
-    
+
     socket.on('disconnect', () => {
       sockets = sockets.filter((v) => v.id !== socket.id);
       portMap[socket.id] = undefined;
       socketsCount--;
-      logger.log("A server has been disconnected");
+      logger.log('A server has been disconnected');
       loadBalancing();
     });
 
@@ -89,6 +91,7 @@ makeTablets().then((tabletMarkers) => {
     });
 
     socket.on('update', (dataUpdate) => {
+      console.log('UPDATED!!!!!!!');
       handleDataBaseUpdate(dataUpdate);
     });
   });
@@ -124,7 +127,7 @@ async function makeTablets() {
 //writing metadata
 function writeMeta(meta) {
   fs.writeFile(
-    './master/metadata.json',
+    './src/master/metadata.json',
     JSON.stringify(meta, null, 2),
     function (err) {
       if (err) throw err;
@@ -134,16 +137,14 @@ function writeMeta(meta) {
 }
 
 async function sendMeta(meta) {
-  if(sockets.length !== 0) 
-    logger.log("sending meta data to servers");
+  if (sockets.length !== 0) logger.log('sending meta data to servers');
 
   // send meta to all servers
   for (const socket of sockets) {
     //console.log(meta[socket.id]);
     socket.emit('get-meta', meta[socket.id]);
   }
-  if(clientSockets.length !== 0) 
-    logger.log("sending meta data to clients");
+  if (clientSockets.length !== 0) logger.log('sending meta data to clients');
 
   // send meta to all clients
   for (const socket of clientSockets) {
@@ -152,7 +153,7 @@ async function sendMeta(meta) {
 }
 
 async function sendDB(meta) {
-  logger.log("sending tablets to servers");
+  logger.log('sending tablets to servers');
   // send DB to all servers
   for (const socket of sockets) {
     const regions = meta[socket.id].regions;
@@ -170,7 +171,7 @@ async function loadBalancing(addedRows = []) {
   const sortedRegions = Object.keys(tabletsCounts).sort(
     (a, b) => tabletsCounts[a] - tabletsCounts[b]
   );
-  logger.log("load balancing has been triggred ");
+  logger.log('load balancing has been triggred ');
 
   updateMeta(sortedRegions);
 }
@@ -243,30 +244,34 @@ function updateMeta(sortedRegions) {
   return meta;
 }
 
-const handleDataBaseUpdate = (dataUpdate) => {
+const handleDataBaseUpdate = async (dataUpdate) => {
   const addedRows = {};
-  for (const update of dataUpdate) {
-    switch (update.type) {
-      case 'set':
-        set(update.req.row, update.req.object).then();
-        break;
-      case 'deleteCells':
-        DeleteCells(update.req.row, update.req.cells).then();
-        addedRows[update.req.row.Region] =
-          addedRows[update.req.row.Region] || 0 - 1;
-        break;
-      case 'delete':
-        DeleteRow(update.req.row).then();
-        break;
-      case 'addRow':
-        AddRow(update.req.object).then();
-        addedRows[update.req.row.Region] =
-          addedRows[update.req.row.Region] || 0 + 1;
-        break;
-      default:
-        break;
+
+  lock.acquire('update-lock', async (done) => {
+    for (const update of dataUpdate) {
+      switch (update.type) {
+        case 'set':
+          await set(update.req.row, update.req.object);
+          break;
+        case 'deleteCells':
+          await DeleteCells(update.req.row, update.req.cells);
+          addedRows[update.req.row.Region] =
+            addedRows[update.req.row.Region] || 0 - 1;
+          break;
+        case 'delete':
+          await DeleteRow(update.req.row);
+          break;
+        case 'addRow':
+          await AddRow(update.req.object);
+          addedRows[update.req.row.Region] =
+            addedRows[update.req.row.Region] || 0 + 1;
+          break;
+        default:
+          break;
+      }
     }
-  }
+    done();
+  });
 
   const addedRowsArr = Object.entries(addedRows).map((e) => {
     return { region: e[0], count: e[1] };
