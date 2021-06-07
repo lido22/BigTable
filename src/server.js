@@ -47,7 +47,7 @@ function connectMaster(url) {
 }
 
 function openServer() {
-  server.listen(port, () => {
+  server.listen(8080, () => {
     console.log('server started');
 
     const io = require('socket.io')(server);
@@ -80,7 +80,7 @@ const handleGetTablets = (socket) => {
   socket.on('get-tablets', (tablets) => {
     logger.log('receiving tablets');
     // connect to mongo
-    const url = `mongodb://127.0.0.1:27017/tracks${meta.port % 10}`;
+    const url = `mongodb://127.0.0.1:27017/tracks`;
     console.log(url);
     mongoose
       .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })

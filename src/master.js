@@ -64,7 +64,7 @@ function handleClientConnection() {
 makeTablets().then((tabletMarkers) => {
   const regions = tabletMarkers.map((marker) => marker._id);
 
-  const meta = updateMeta(regions);
+  //const meta = updateMeta(regions);
 
   // master to server socket
   const io = require('socket.io')(masterToServer);
@@ -177,14 +177,11 @@ async function loadBalancing(addedRows = []) {
 }
 
 function updateMeta(sortedRegions) {
-  // TODO
-  // DEEP EQUAL META DATA
-
   // no servers
   if (socketsCount === 0) {
     const oldMeta = meta;
     meta = {};
-    if (oldMeta !== meta) {
+    if (!isEqual(oldMeta, meta)) {
       sendMeta(meta);
       writeMeta(meta);
     }
@@ -202,7 +199,7 @@ function updateMeta(sortedRegions) {
       },
     };
 
-    if (oldMeta !== meta) {
+    if (!isEqual(oldMeta, meta)) {
       sendMeta(meta);
       sendTablets(meta);
       writeMeta(meta);
@@ -241,7 +238,7 @@ function updateMeta(sortedRegions) {
     },
   };
 
-  if (oldMeta !== meta) {
+  if (!isEqual(oldMeta, meta)) {
     sendMeta(meta);
     sendTablets(meta);
     writeMeta(meta);
@@ -287,3 +284,20 @@ const handleDataBaseUpdate = async (dataUpdate) => {
 };
 
 handleClientConnection();
+
+function isEqual(obj1, obj2) {
+  if (Object.keys(obj1).length !== Object.keys(obj2).length) return false;
+
+  for (const key in obj1) {
+    for (const region of obj1[key].regions) {
+      if (
+        !obj2[key] ||
+        !obj2[key].regions ||
+        !obj2[key].regions.includes(region)
+      )
+        return false;
+    }
+  }
+
+  return true;
+}

@@ -1,11 +1,11 @@
 {
-  "J9Lra_b2PlisanlfAAAB": {
+  "VjnPJtXaOVGID5ZDAAAU": {
     "regions": [
       "it",
       "fr",
       "ec"
     ],
     "port": 8080,
-    "url": "http://localhost:8080"
+    "url": "http://f4c7c94d15e1.ngrok.io"
   }
 }
