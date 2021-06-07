@@ -185,6 +185,9 @@ const handleReadRows = (socket) => {
         socket.emit('sendingRows', tracks);
       })
       .catch(console.log);
+
+    logger.log('reading some rows data');
+    logger.log('diconnecting client');
   });
 };
 
