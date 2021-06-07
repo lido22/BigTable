@@ -1,23 +1,17 @@
-(2021-06-07 05:27:09 am)	connecting to master
-(2021-06-07 05:27:09 am)	receiving meta data
-(2021-06-07 05:27:10 am)	receiving tablets
-(2021-06-07 05:27:32 am)	A client has been connected
-(2021-06-07 05:27:32 am)	row data has been changed
-(2021-06-07 05:27:32 am)	diconnecting client
-(2021-06-07 05:27:33 am)	A client has been connected
-(2021-06-07 05:27:33 am)	reading some rows data
-(2021-06-07 05:29:14 am)	A client has been connected
-(2021-06-07 05:29:14 am)	row cells has been deleted
-(2021-06-07 05:29:14 am)	diconnecting client
-(2021-06-07 05:29:15 am)	A client has been connected
-(2021-06-07 05:29:15 am)	reading some rows data
-(2021-06-07 05:30:59 am)	A client has been connected
-(2021-06-07 05:30:59 am)	A row has been deleted
-(2021-06-07 05:30:59 am)	diconnecting client
-(2021-06-07 05:31:00 am)	A client has been connected
-(2021-06-07 05:31:00 am)	reading some rows data
-(2021-06-07 05:34:16 am)	A client has been connected
-(2021-06-07 05:34:16 am)	A row has been added
-(2021-06-07 05:34:16 am)	diconnecting client
-(2021-06-07 05:34:17 am)	A client has been connected
-(2021-06-07 05:34:17 am)	reading some rows data
+(2021-06-07 06:00:08 am)	connecting to master
+(2021-06-07 06:00:08 am)	receiving meta data
+(2021-06-07 06:00:09 am)	receiving tablets
+(2021-06-07 06:00:14 am)	A client has been connected
+(2021-06-07 06:00:14 am)	A row has been added
+(2021-06-07 06:00:14 am)	diconnecting client
+(2021-06-07 06:00:15 am)	A client has been connected
+(2021-06-07 06:00:15 am)	reading some rows data
+(2021-06-07 06:00:15 am)	reading some rows data
+(2021-06-07 06:00:15 am)	diconnecting client
+(2021-06-07 06:00:31 am)	A client has been connected
+(2021-06-07 06:00:31 am)	A row has been added
+(2021-06-07 06:00:31 am)	diconnecting client
+(2021-06-07 06:00:32 am)	A client has been connected
+(2021-06-07 06:00:32 am)	reading some rows data
+(2021-06-07 06:00:32 am)	reading some rows data
+(2021-06-07 06:00:32 am)	diconnecting client

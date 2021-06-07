@@ -170,7 +170,7 @@ async function sendTablets() {
 async function loadBalancing(addedRows = []) {
   addedRows.forEach((addedRow) => {
     tabletsCounts[addedRow.region] =
-      tabletsCounts[addedRow.region] || 0 + addedRow.count;
+      (tabletsCounts[addedRow.region] || 0) + addedRow.count;
   });
 
   const sortedRegions = Object.keys(tabletsCounts).sort(
@@ -273,11 +273,12 @@ const handleDataBaseUpdate = async (dataUpdate) => {
         case 'delete':
           await DeleteRow(update.req);
           for (let { Region } of update.req)
-            addedRows[Region] = addedRows[Region] || 0 - 1;
+            addedRows[Region] = (addedRows[Region] || 0) - 1;
           break;
         case 'addRow':
           await AddRow(update.req);
-          addedRows[update.req.Region] = addedRows[update.req.Region] || 0 + 1;
+          addedRows[update.req.Region] =
+            (addedRows[update.req.Region] || 0) + 1;
           break;
         default:
           break;

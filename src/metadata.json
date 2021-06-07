@@ -1,17 +1,11 @@
 {
-  "WQmI3gwlP3lDDQQRAAAD": {
+  "mlH5QHCQpDDAAauUAAAF": {
     "regions": [
       "it",
-      "ec"
-    ],
-    "port": 8080,
-    "url": "http://eec774ba7963.ngrok.io"
-  },
-  "NdknUbkrv3j8JEbsAAAF": {
-    "regions": [
+      "ec",
       "fr"
     ],
-    "port": 8081,
-    "url": "http://ba7e799f4f09.ngrok.io"
+    "port": 8080,
+    "url": "http://localhost:8080"
   }
 }

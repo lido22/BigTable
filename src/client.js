@@ -167,7 +167,7 @@ setTimeout(() => {
   testDelete();
 }, 2000);
 */
-/*
+
 setTimeout(() => {
   testAdd();
 }, 2000);
@@ -175,4 +175,3 @@ setTimeout(() => {
 setTimeout(() => {
   testReadRows();
 }, 3000);
-*/
