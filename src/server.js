@@ -181,6 +181,7 @@ const handleReadRows = (socket) => {
       })
       .catch(console.log);
     logger.log('reading some rows data');
+    logger.log('diconnecting client');
   });
 };
 
