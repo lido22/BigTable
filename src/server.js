@@ -55,6 +55,10 @@ function openServer() {
       handleDelete(socket);
       handleDeleteCells(socket);
       handleReadRows(socket);
+
+      socket.on('disconnect', () => {
+        logger.log('diconnecting client');
+      });
     });
   });
 }
@@ -187,11 +191,9 @@ const handleReadRows = (socket) => {
       .catch(console.log);
 
     logger.log('reading some rows data');
-    logger.log('diconnecting client');
   });
 };
 
 const sendDoneEvent = (socket) => {
-  logger.log('diconnecting client');
   socket.emit('done');
 };

@@ -1,21 +1,18 @@
-(2021-06-07 05:27:09 am)	A server has been connected
-(2021-06-07 05:27:09 am)	load balancing has been triggred 
-(2021-06-07 05:27:09 am)	sending meta data to servers
-(2021-06-07 05:27:09 am)	sending tablets to servers
-(2021-06-07 05:27:29 am)	A client has been connected
-(2021-06-07 05:27:29 am)	sending meta data to client
-(2021-06-07 05:27:32 am)	Updating orignal tables
-(2021-06-07 05:29:12 am)	A client has been connected
-(2021-06-07 05:29:12 am)	sending meta data to client
-(2021-06-07 05:29:14 am)	Updating orignal tables
-(2021-06-07 05:30:57 am)	A client has been connected
-(2021-06-07 05:30:57 am)	sending meta data to client
-(2021-06-07 05:30:59 am)	Updating orignal tables
-(2021-06-07 05:30:59 am)	load balancing has been triggred 
-(2021-06-07 05:34:14 am)	A client has been connected
-(2021-06-07 05:34:14 am)	sending meta data to client
-(2021-06-07 05:34:16 am)	Updating orignal tables
-(2021-06-07 05:34:16 am)	load balancing has been triggred 
-(2021-06-07 05:34:31 am)	A server has been disconnected
-(2021-06-07 05:34:31 am)	load balancing has been triggred 
-(2021-06-07 05:34:31 am)	sending meta data to clients
+(2021-06-07 05:41:08 am)	A client has been connected
+(2021-06-07 05:41:08 am)	sending meta data to client
+(2021-06-07 05:41:56 am)	A server has been connected
+(2021-06-07 05:41:56 am)	load balancing has been triggred 
+(2021-06-07 05:41:56 am)	sending meta data to servers
+(2021-06-07 05:41:56 am)	sending meta data to clients
+(2021-06-07 05:41:56 am)	sending tablets to servers
+(2021-06-07 05:42:06 am)	A server has been connected
+(2021-06-07 05:42:06 am)	load balancing has been triggred 
+(2021-06-07 05:42:06 am)	sending meta data to servers
+(2021-06-07 05:42:06 am)	sending meta data to clients
+(2021-06-07 05:42:06 am)	sending tablets to servers
+(2021-06-07 05:42:17 am)	A client has been connected
+(2021-06-07 05:42:17 am)	sending meta data to client
+(2021-06-07 05:43:00 am)	A client has been connected
+(2021-06-07 05:43:00 am)	sending meta data to client
+(2021-06-07 05:43:03 am)	Updating orignal tables
+(2021-06-07 05:43:03 am)	load balancing has been triggred 
