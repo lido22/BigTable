@@ -1,8 +1,82 @@
-(2021-06-07 06:00:30 am)	connecting to master
-(2021-06-07 06:00:31 am)	meta data recieved
-(2021-06-07 06:00:31 am)	Adding a row
-(2021-06-07 06:00:31 am)	connecting to server
-(2021-06-07 06:00:31 am)	connection closed
-(2021-06-07 06:00:32 am)	reading rows
-(2021-06-07 06:00:32 am)	connecting to server
-(2021-06-07 06:00:32 am)	receiving rows data
+(2021-06-07 12:07:03 pm)	connecting to master
+(2021-06-07 12:07:03 pm)	meta data recieved
+(2021-06-07 12:07:03 pm)	Adding a row {
+  "Name": "walid",
+  "Data": "1/7/2021",
+  "Artist": "HBO",
+  "URL": "https://youtube.com",
+  "Streams": "19270",
+  "Position": 2,
+  "Region": "fr"
+}
+(2021-06-07 12:07:03 pm)	connecting to server
+(2021-06-07 12:07:03 pm)	deleting cells from a row {
+  "row": {
+    "Region": "fr",
+    "ID": 3
+  },
+  "cells": [
+    "URL",
+    "Name"
+  ]
+}
+(2021-06-07 12:07:03 pm)	connecting to server
+(2021-06-07 12:07:03 pm)	deleting a row [
+  {
+    "Region": "it",
+    "ID": 11
+  },
+  {
+    "Region": "it",
+    "ID": 12
+  }
+]
+(2021-06-07 12:07:03 pm)	connecting to server
+(2021-06-07 12:07:03 pm)	Adding a row {
+  "Name": "walid",
+  "Data": "1/7/2021",
+  "Artist": "HBO",
+  "URL": "https://youtube.com",
+  "Streams": "19270",
+  "Position": 2,
+  "Region": "fr"
+}
+(2021-06-07 12:07:03 pm)	connecting to server
+(2021-06-07 12:07:04 pm)	Set a row {
+  "row": {
+    "Region": "fr",
+    "ID": 1
+  },
+  "object": {
+    "Name": "ALI",
+    "Date": "6/6/2021"
+  }
+}
+(2021-06-07 12:07:04 pm)	connecting to server
+(2021-06-07 12:07:04 pm)	reading rows [
+  {
+    "Region": "fr",
+    "Artist": "HBO",
+    "Name": "walid"
+  }
+]
+(2021-06-07 12:07:04 pm)	connecting to server
+(2021-06-07 12:07:05 pm)	operation done, connection closed
+(2021-06-07 12:07:05 pm)	operation done, connection closed
+(2021-06-07 12:07:05 pm)	operation done, connection closed
+(2021-06-07 12:07:05 pm)	operation done, connection closed
+(2021-06-07 12:07:06 pm)	operation done, connection closed
+(2021-06-07 12:07:06 pm)	received rows data [
+  {
+    "_id": "60bdea36fddaac19374f947d",
+    "Name": "walid",
+    "Artist": "HBO",
+    "URL": "https://youtube.com",
+    "Streams": "19270",
+    "Position": 2,
+    "Region": "fr",
+    "ID": 401,
+    "__v": 0
+  }
+]
+(2021-06-07 12:07:06 pm)	operation done, connection closed

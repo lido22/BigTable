@@ -46,14 +46,14 @@ const getServerSocket = (region) => {
   logger.log('connecting to server');
 
   serverSocket.on('done', () => {
-    logger.log('connection closed');
+    logger.log('operation done, connection closed');
 
     serverSocket.close();
   });
 
   serverSocket.on('sendingRows', (tracks) => {
-    console.log(tracks);
-    logger.log('receiving rows data');
+    logger.log('received rows data ' + JSON.stringify(tracks, null, 2));
+    logger.log('operation done, connection closed');
 
     // close socket
     serverSocket.close();
@@ -74,8 +74,6 @@ function sendRequest(requestName, request, tabletRange) {
 }
 
 async function testSet() {
-  logger.log('Set a row');
-
   const req = {
     row: {
       Region: 'fr',
@@ -86,13 +84,11 @@ async function testSet() {
       Date: '6/6/2021',
     },
   };
-
+  logger.log('Set a row ' + JSON.stringify(req, null, 2));
   sendRequest('set', req, req.row.Region);
 }
 
 async function testDeleteCells() {
-  logger.log('deleting cells from a row');
-
   // deletecells
   const req = {
     row: {
@@ -101,13 +97,12 @@ async function testDeleteCells() {
     },
     cells: ['URL', 'Name'],
   };
+  logger.log('deleting cells from a row ' + JSON.stringify(req, null, 2));
 
   sendRequest('deleteCells', req, req.row.Region);
 }
 
 async function testDelete() {
-  logger.log('deleting a row');
-
   const req = [
     {
       Region: 'it',
@@ -119,13 +114,13 @@ async function testDelete() {
     },
   ];
 
+  logger.log('deleting a row ' + JSON.stringify(req, null, 2));
+
   sendRequest('delete', req, req[0].Region);
 }
 
 async function testAdd() {
   // addRow
-  logger.log('Adding a row');
-
   const req = {
     Name: 'walid',
     Data: '1/7/2021',
@@ -136,37 +131,35 @@ async function testAdd() {
     Region: 'fr',
   };
 
+  logger.log('Adding a row ' + JSON.stringify(req, null, 2));
+
   sendRequest('addRow', req, req.Region);
 }
 
 async function testReadRows() {
-  logger.log('reading rows');
-
   // readRows
   const req = [{ Region: 'fr', Artist: 'HBO', Name: 'walid' }];
 
+  logger.log('reading rows ' + JSON.stringify(req, null, 2));
+
   sendRequest('readRows', req, req[0].Region);
 }
-/*
+
 setTimeout(() => {
   testAdd();
 }, 2000);
-*/
-/*
+
 setTimeout(() => {
   testSet();
 }, 3000);
-*/
-/*
+
 setTimeout(() => {
   testDeleteCells();
 }, 2000);
-*/
-/*
+
 setTimeout(() => {
   testDelete();
 }, 2000);
-*/
 
 setTimeout(() => {
   testAdd();
