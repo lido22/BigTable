@@ -25,13 +25,22 @@ const handleGetMeta = (socket) => {
 };
 
 const getServerSocket = (region) => {
-  let url = 0;
+  let url;
 
   Object.values(meta).forEach((v) => {
     v.regions.forEach((r) => {
       if (r === region) url = v.url;
     });
   });
+
+  if (!url) {
+    const keys = Object.keys(meta);
+
+    if (!keys.length) return undefined;
+
+    let idx = Math.floor(Math.random() * keys.length);
+    ({ url } = meta[keys[idx]]);
+  }
 
   const serverSocket = io(url);
   logger.log('connecting to server');
@@ -53,71 +62,35 @@ const getServerSocket = (region) => {
   return serverSocket;
 };
 
-async function test1() {
-  // addRow
-  logger.log('Adding a row');
+function sendRequest(requestName, request, tabletRange) {
+  const serverSocket = getServerSocket(tabletRange);
+
+  if (!serverSocket) {
+    logger.log('No server available');
+    return;
+  }
+
+  serverSocket.emit(requestName, request);
+}
+
+async function testSet() {
+  logger.log('Set a row');
 
   const req = {
     row: {
       Region: 'fr',
+      ID: 1,
     },
     object: {
-      Name: 'walid',
-      Data: '1/7/2021',
-      Artist: 'HBO',
-      URL: 'https://youtube.com',
-      Streams: '19270',
-      Position: 2,
-      Region: 'fr',
+      Name: 'ALI',
+      Date: '6/6/2021',
     },
   };
 
-  // get serverSocket
-  const serverSocket = getServerSocket(req.row.Region);
-
-  serverSocket.emit('addRow', req);
+  sendRequest('set', req, req.row.Region);
 }
 
-async function test2() {
-  logger.log('deleting a row');
-
-  // deleteRow
-  //TODO: convert to array of row keys
-  const req = {
-    row: {
-      Region: 'it',
-      ID: 11,
-    },
-  };
-
-  // get serverSocket
-  const serverSocket = getServerSocket(req.row.Region);
-
-  serverSocket.emit('delete', req);
-}
-
-async function test3() {
-  logger.log('reading rows');
-
-  // readRows
-  const req = [
-    {
-      Region: 'it',
-      ID: 2,
-    },
-    {
-      Region: 'ec',
-      ID: 21,
-    },
-  ];
-
-  // get serverSocket
-  const serverSocket = getServerSocket(req[0].Region);
-
-  serverSocket.emit('readRows', req);
-}
-
-async function test4() {
+async function testDeleteCells() {
   logger.log('deleting cells from a row');
 
   // deletecells
@@ -129,25 +102,77 @@ async function test4() {
     cells: ['URL', 'Name'],
   };
 
-  // get serverSocket
-  const serverSocket = getServerSocket(req.row.Region);
-
-  serverSocket.emit('deleteCells', req);
+  sendRequest('deleteCells', req, req.row.Region);
 }
 
-setTimeout(() => {
-  test1();
-  test1();
-}, 1000);
+async function testDelete() {
+  logger.log('deleting a row');
 
+  const req = [
+    {
+      Region: 'it',
+      ID: 11,
+    },
+    {
+      Region: 'it',
+      ID: 12,
+    },
+  ];
+
+  sendRequest('delete', req, req[0].Region);
+}
+
+async function testAdd() {
+  // addRow
+  logger.log('Adding a row');
+
+  const req = {
+    Name: 'walid',
+    Data: '1/7/2021',
+    Artist: 'HBO',
+    URL: 'https://youtube.com',
+    Streams: '19270',
+    Position: 2,
+    Region: 'fr',
+  };
+
+  sendRequest('addRow', req, req.Region);
+}
+
+async function testReadRows() {
+  logger.log('reading rows');
+
+  // readRows
+  const req = [{ Region: 'fr', Artist: 'HBO', Name: 'walid' }];
+
+  sendRequest('readRows', req, req[0].Region);
+}
+/*
 setTimeout(() => {
-  test2();
+  testAdd();
+}, 2000);
+*/
+/*
+setTimeout(() => {
+  testSet();
+}, 3000);
+*/
+/*
+setTimeout(() => {
+  testDeleteCells();
+}, 2000);
+*/
+/*
+setTimeout(() => {
+  testDelete();
+}, 2000);
+*/
+/*
+setTimeout(() => {
+  testAdd();
 }, 2000);
 
 setTimeout(() => {
-  test3();
+  testReadRows();
 }, 3000);
-
-setTimeout(() => {
-  test4();
-}, 1000);
+*/

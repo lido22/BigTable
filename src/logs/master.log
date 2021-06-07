@@ -1,50 +1,21 @@
-(2021-06-07 01:48:04 am)	A server has been connected
-(2021-06-07 01:48:04 am)	load balancing has been triggred 
-(2021-06-07 01:48:04 am)	sending meta data to servers
-(2021-06-07 01:48:04 am)	sending tablets to servers
-(2021-06-07 01:48:47 am)	A server has been disconnected
-(2021-06-07 01:48:47 am)	load balancing has been triggred 
-(2021-06-07 01:48:53 am)	A server has been connected
-(2021-06-07 01:48:53 am)	load balancing has been triggred 
-(2021-06-07 01:48:53 am)	sending meta data to servers
-(2021-06-07 01:48:53 am)	sending tablets to servers
-(2021-06-07 01:52:33 am)	A server has been disconnected
-(2021-06-07 01:52:33 am)	load balancing has been triggred 
-(2021-06-07 01:52:39 am)	A server has been connected
-(2021-06-07 01:52:39 am)	load balancing has been triggred 
-(2021-06-07 01:52:39 am)	sending meta data to servers
-(2021-06-07 01:52:39 am)	sending tablets to servers
-(2021-06-07 01:52:57 am)	A server has been connected
-(2021-06-07 01:52:57 am)	load balancing has been triggred 
-(2021-06-07 01:52:57 am)	sending meta data to servers
-(2021-06-07 01:52:57 am)	sending tablets to servers
-(2021-06-07 01:53:13 am)	A server has been connected
-(2021-06-07 01:53:13 am)	load balancing has been triggred 
-(2021-06-07 01:53:13 am)	sending meta data to servers
-(2021-06-07 01:53:13 am)	sending tablets to servers
-(2021-06-07 01:53:57 am)	A server has been disconnected
-(2021-06-07 01:53:57 am)	load balancing has been triggred 
-(2021-06-07 01:53:57 am)	sending meta data to servers
-(2021-06-07 01:53:57 am)	sending tablets to servers
-(2021-06-07 01:54:37 am)	A server has been disconnected
-(2021-06-07 01:54:37 am)	load balancing has been triggred 
-(2021-06-07 01:54:37 am)	sending meta data to servers
-(2021-06-07 01:54:37 am)	sending tablets to servers
-(2021-06-07 01:54:44 am)	A client has been connected
-(2021-06-07 01:54:44 am)	sending meta data to client
-(2021-06-07 01:59:54 am)	A client has been connected
-(2021-06-07 01:59:54 am)	sending meta data to client
-(2021-06-07 02:01:33 am)	A client has been connected
-(2021-06-07 02:01:33 am)	sending meta data to client
-(2021-06-07 02:02:09 am)	A client has been connected
-(2021-06-07 02:02:09 am)	sending meta data to client
-(2021-06-07 02:21:02 am)	A server has been disconnected
-(2021-06-07 02:21:02 am)	load balancing has been triggred 
-(2021-06-07 02:21:02 am)	sending meta data to clients
-(2021-06-07 02:21:38 am)	A server has been connected
-(2021-06-07 02:21:38 am)	load balancing has been triggred 
-(2021-06-07 02:21:38 am)	sending meta data to servers
-(2021-06-07 02:21:38 am)	sending meta data to clients
-(2021-06-07 02:21:38 am)	sending tablets to servers
-(2021-06-07 02:21:38 am)	A client has been connected
-(2021-06-07 02:21:38 am)	sending meta data to client
+(2021-06-07 05:27:09 am)	A server has been connected
+(2021-06-07 05:27:09 am)	load balancing has been triggred 
+(2021-06-07 05:27:09 am)	sending meta data to servers
+(2021-06-07 05:27:09 am)	sending tablets to servers
+(2021-06-07 05:27:29 am)	A client has been connected
+(2021-06-07 05:27:29 am)	sending meta data to client
+(2021-06-07 05:27:32 am)	Updating orignal tables
+(2021-06-07 05:29:12 am)	A client has been connected
+(2021-06-07 05:29:12 am)	sending meta data to client
+(2021-06-07 05:29:14 am)	Updating orignal tables
+(2021-06-07 05:30:57 am)	A client has been connected
+(2021-06-07 05:30:57 am)	sending meta data to client
+(2021-06-07 05:30:59 am)	Updating orignal tables
+(2021-06-07 05:30:59 am)	load balancing has been triggred 
+(2021-06-07 05:34:14 am)	A client has been connected
+(2021-06-07 05:34:14 am)	sending meta data to client
+(2021-06-07 05:34:16 am)	Updating orignal tables
+(2021-06-07 05:34:16 am)	load balancing has been triggred 
+(2021-06-07 05:34:31 am)	A server has been disconnected
+(2021-06-07 05:34:31 am)	load balancing has been triggred 
+(2021-06-07 05:34:31 am)	sending meta data to clients

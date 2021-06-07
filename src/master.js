@@ -79,6 +79,7 @@ makeTablets().then((tabletMarkers) => {
     if (!isPortTaken(8080)) portMap[socket.id] = 8080;
     else portMap[socket.id] = 8081;
 
+    console.log('LOAD B  in connection');
     loadBalancing();
 
     socket.on('disconnect', () => {
@@ -87,6 +88,7 @@ makeTablets().then((tabletMarkers) => {
       urlMap[socket.id] = undefined;
       socketsCount--;
       logger.log('A server has been disconnected');
+      console.log('LOAD B  in disconnection');
       loadBalancing();
     });
 
@@ -125,7 +127,7 @@ async function makeTablets() {
 }
 
 //writing metadata
-function writeMeta(meta) {
+function writeMeta() {
   fs.writeFile(
     './src/metadata.json',
     JSON.stringify(meta, null, 2),
@@ -136,7 +138,9 @@ function writeMeta(meta) {
   );
 }
 
-async function sendMeta(meta) {
+async function sendMeta() {
+  console.log(meta);
+
   if (sockets.length !== 0) logger.log('sending meta data to servers');
 
   // send meta to all servers
@@ -152,12 +156,13 @@ async function sendMeta(meta) {
   }
 }
 
-async function sendTablets(meta) {
+async function sendTablets() {
   logger.log('sending tablets to servers');
   // send tablets to all servers
   for (const socket of sockets) {
     const regions = meta[socket.id].regions;
     const tracks = await Track.find({ Region: { $in: regions } });
+    console.log(socket.id);
     socket.emit('get-tablets', tracks);
   }
 }
@@ -171,26 +176,31 @@ async function loadBalancing(addedRows = []) {
   const sortedRegions = Object.keys(tabletsCounts).sort(
     (a, b) => tabletsCounts[a] - tabletsCounts[b]
   );
+
+  console.log(tabletsCounts);
+  console.log(sortedRegions);
+
   logger.log('load balancing has been triggred ');
 
   updateMeta(sortedRegions);
 }
 
 function updateMeta(sortedRegions) {
+  console.log(sortedRegions);
   // no servers
   if (socketsCount === 0) {
-    const oldMeta = meta;
+    const oldMeta = { ...meta };
     meta = {};
     if (!isEqual(oldMeta, meta)) {
-      sendMeta(meta);
-      writeMeta(meta);
+      sendMeta();
+      writeMeta();
     }
-    return meta; // empty meta
+    return; // empty meta
   }
 
   if (socketsCount < 2) {
     // if one server connected
-    const oldMeta = meta;
+    const oldMeta = { ...meta };
     meta = {
       [sockets[0].id]: {
         regions: sortedRegions,
@@ -200,12 +210,13 @@ function updateMeta(sortedRegions) {
     };
 
     if (!isEqual(oldMeta, meta)) {
-      sendMeta(meta);
-      sendTablets(meta);
-      writeMeta(meta);
+      console.log('NOT EQUAL');
+      sendMeta();
+      sendTablets();
+      writeMeta();
     }
 
-    return meta;
+    return;
   }
 
   const firstServerRegions = [];
@@ -224,7 +235,7 @@ function updateMeta(sortedRegions) {
     servers[i % 2].push(sortedRegions[i], sortedRegions[j]);
   }
 
-  const oldMeta = meta;
+  const oldMeta = { ...meta };
   meta = {
     [sockets[0].id]: {
       regions: firstServerRegions,
@@ -239,18 +250,18 @@ function updateMeta(sortedRegions) {
   };
 
   if (!isEqual(oldMeta, meta)) {
-    sendMeta(meta);
-    sendTablets(meta);
-    writeMeta(meta);
+    sendMeta();
+    sendTablets();
+    writeMeta();
   }
 
-  return meta;
+  return;
 }
 
 const handleDataBaseUpdate = async (dataUpdate) => {
   const addedRows = {};
 
-  lock.acquire('update-lock', async (done) => {
+  await lock.acquire('update-lock', async (done) => {
     for (const update of dataUpdate) {
       switch (update.type) {
         case 'set':
@@ -258,16 +269,15 @@ const handleDataBaseUpdate = async (dataUpdate) => {
           break;
         case 'deleteCells':
           await DeleteCells(update.req.row, update.req.cells);
-          addedRows[update.req.row.Region] =
-            addedRows[update.req.row.Region] || 0 - 1;
           break;
         case 'delete':
-          await DeleteRow(update.req.row);
+          await DeleteRow(update.req);
+          for (let { Region } of update.req)
+            addedRows[Region] = addedRows[Region] || 0 - 1;
           break;
         case 'addRow':
-          await AddRow(update.req.object);
-          addedRows[update.req.row.Region] =
-            addedRows[update.req.row.Region] || 0 + 1;
+          await AddRow(update.req);
+          addedRows[update.req.Region] = addedRows[update.req.Region] || 0 + 1;
           break;
         default:
           break;
@@ -280,7 +290,10 @@ const handleDataBaseUpdate = async (dataUpdate) => {
     return { region: e[0], count: e[1] };
   });
 
-  if (addedRowsArr.length > 0) loadBalancing(addedRowsArr);
+  if (addedRowsArr.length > 0) {
+    console.log('LOAD B  in tablet update');
+    loadBalancing(addedRowsArr);
+  }
 };
 
 handleClientConnection();
@@ -289,13 +302,11 @@ function isEqual(obj1, obj2) {
   if (Object.keys(obj1).length !== Object.keys(obj2).length) return false;
 
   for (const key in obj1) {
+    if (!obj2[key] || !obj2[key].regions) return false;
+    if (obj2[key].regions.length !== obj1[key].regions.length) return false;
+
     for (const region of obj1[key].regions) {
-      if (
-        !obj2[key] ||
-        !obj2[key].regions ||
-        !obj2[key].regions.includes(region)
-      )
-        return false;
+      if (!obj2[key].regions.includes(region)) return false;
     }
   }
 

@@ -13,9 +13,8 @@ async function DeleteCells(row, cells) {
 }
 // DeleteCells(1, {Name:"", Date:"", Position:""})
 
-async function DeleteRow(row) {
-  //TODO use deleteMany
-  return await Track.findOneAndRemove(row);
+async function DeleteRow(rows) {
+  return await Track.deleteMany({ $or: rows });
 }
 //to-do
 async function AddRow(obj) {
@@ -23,7 +22,7 @@ async function AddRow(obj) {
     .sort({ ID: -1 })
     .limit(1);
 
-  const lastID = lastTrack.ID;
+  const lastID = lastTrack ? lastTrack.ID : 0;
 
   obj.ID = lastID + 1;
 

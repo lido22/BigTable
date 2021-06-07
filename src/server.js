@@ -9,9 +9,6 @@ const clientIO = require('socket.io-client');
 const fs = require('fs');
 const Track = require('./common/track.model');
 const logger = require('./logs/logger');
-const EventEmitter = require('events');
-const myEmitter = new EventEmitter();
-
 const {
   set,
   DeleteCells,
@@ -31,10 +28,10 @@ let port = undefined;
 
 let dataUpdate = [];
 
-myEmitter.on('update-event', () => {
+function updateEvent() {
   masterSocket.emit('update', dataUpdate);
   dataUpdate = [];
-});
+}
 
 function connectMaster(url) {
   const socket = clientIO(url, { query: `url=${process.env.SERVER}` });
@@ -78,9 +75,10 @@ const handleGetMeta = (socket) => {
 
 const handleGetTablets = (socket) => {
   socket.on('get-tablets', (tablets) => {
+    console.log(socket.id);
     logger.log('receiving tablets');
     // connect to mongo
-    const url = `mongodb://127.0.0.1:27017/tracks`;
+    const url = `mongodb://127.0.0.1:27017/tracks_tablets`;
     console.log(url);
     mongoose
       .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -88,6 +86,7 @@ const handleGetTablets = (socket) => {
       .then(async () => {
         // create tablets database
         await Track.deleteMany();
+        console.log('DELETED DB');
         await Track.insertMany(tablets);
         console.log('Created tablets');
       })
@@ -97,71 +96,76 @@ const handleGetTablets = (socket) => {
 
 const handleDelete = (socket) => {
   socket.on('delete', (req) => {
-    lock.acquire(req.row.Region, function (done) {
-      DeleteRow(req.row)
-        .then((row) => {
-          if (row) {
-            console.log(`Deleted Row ${row.ID} - ${row.Region}`);
-            dataUpdate.push({ req, type: 'delete' });
-            myEmitter.emit('update-event');
-          }
+    lock
+      .acquire(
+        [...new Set(Object.values(req).map((row) => row.Region))],
+        function (done) {
+          DeleteRow(req)
+            .then((row) => {
+              if (row) {
+                dataUpdate.push({ req, type: 'delete' });
+                updateEvent();
+              }
 
-          sendDoneEvent(socket);
-          done();
-        })
-        .catch(console.log);
-    });
-    logger.log('A row has been deleted');
+              sendDoneEvent(socket);
+              done();
+            })
+            .catch(console.log);
+        }
+      )
+      .then(logger.log('A row has been deleted'));
   });
 };
 
 const handleDeleteCells = (socket) => {
   socket.on('deleteCells', (req) => {
-    lock.acquire(req.row.Region, function (done) {
-      DeleteCells(req.row, req.cells)
-        .then((row) => {
-          if (row) {
-            console.log(row);
-            dataUpdate.push({ req, type: 'deleteCells' });
-            myEmitter.emit('update-event');
-          }
-          sendDoneEvent(socket);
-          done();
-        })
-        .catch(console.log);
-    });
-    logger.log('row cells has been deleted');
+    lock
+      .acquire(req.row.Region, function (done) {
+        DeleteCells(req.row, req.cells)
+          .then((row) => {
+            if (row) {
+              dataUpdate.push({ req, type: 'deleteCells' });
+              updateEvent();
+            }
+            sendDoneEvent(socket);
+            done();
+          })
+          .catch(console.log);
+      })
+      .then(logger.log('row cells has been deleted'));
   });
 };
 
 const handleAddRow = (socket) => {
   socket.on('addRow', (req) => {
-    lock.acquire(req.row.Region, function (done) {
-      AddRow(req.object)
-        .then((row) => {
-          console.log(`Added Row ${row.ID} - ${row.Region}`);
-          dataUpdate.push({ req, type: 'addRow' });
-          myEmitter.emit('update-event');
-          sendDoneEvent(socket);
-          done();
-        })
-        .catch(console.log);
-    });
-    logger.log('A row has been added');
+    lock
+      .acquire(req.Region, function (done) {
+        AddRow(req)
+          .then((row) => {
+            console.log(`Added Row ${row.ID} - ${row.Region}`);
+            dataUpdate.push({ req, type: 'addRow' });
+            updateEvent();
+            sendDoneEvent(socket);
+            done();
+          })
+          .catch(console.log);
+      })
+      .then(logger.log('A row has been added'));
   });
 };
 
 const handleSet = (socket) => {
   socket.on('set', (req) => {
-    lock.acquire(req.row.Region, function (done) {
-      set(req.row, req.object)
-        .then(sendDoneEvent(socket))
-        .then(dataUpdate.push({ req, type: 'set' }))
-        .then(myEmitter.emit('update-event'))
-        .then(done)
-        .catch(console.log);
-    });
-    logger.log('row data has been changed');
+    lock
+      .acquire(req.row.Region, async function (done) {
+        await set(req.row, req.object);
+        sendDoneEvent(socket);
+        dataUpdate.push({ req, type: 'set' });
+        updateEvent();
+        done();
+      })
+      .then(logger.log('row data has been changed'))
+      .catch((v) => console.log('CATCH', v));
   });
 };
 
@@ -177,10 +181,10 @@ const handleReadRows = (socket) => {
     ReadRows(req)
       .then((tracks) => {
         //console.log(tracks);
+        logger.log('reading some rows data');
         socket.emit('sendingRows', tracks);
       })
       .catch(console.log);
-    logger.log('reading some rows data');
   });
 };
 
